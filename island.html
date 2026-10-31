@@ -60,6 +60,7 @@ canvas{display:block;width:100vw;height:100vh;cursor:grab}canvas.drag{cursor:gra
 #uiBtn{position:fixed;right:10px;bottom:10px;z-index:30;min-width:88px;min-height:44px;padding:0 14px;border:none;border-radius:22px;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:15px;font-weight:bold;cursor:pointer;touch-action:manipulation}
 body.uiMin #ui{display:none!important}body:not(.uiMin) #ui{bottom:62px}
 @media(max-width:700px){body:not(.uiMin) #ui{display:block;bottom:62px;max-height:50vh;overflow:auto}#uiBtn{right:8px;bottom:8px}}
+body.tpOpen #uiBtn,body.tpOpen #ui{display:none!important}
 </style></head><body><canvas id="c"></canvas><button id="home">🏝 回到全景</button><button id="boardBtn">📋 任務板</button><button id="infoBtn" aria-label="狀態說明">ℹ️</button>
 <div id="tp" role="dialog" aria-label="任務告示板"><div class="box"><div class="hd"><h2>📋 任務告示板</h2><button class="x" aria-label="關閉">✕</button></div><div id="lk" hidden><p>🔒 任務板已上鎖。通行碼只在這一頁有效，關掉或重新整理頁面就會清除。</p><form id="lkf"><input id="lkp" type="password" autocomplete="current-password" placeholder="通行碼"><div class="err" id="lke"></div><button class="pri" type="submit">解鎖</button></form></div>
 <div id="un" hidden><div class="tabs"><button id="tabTask" class="on">📋 任務</button><button id="tabChat">💬 聊天</button></div><div id="taskV"><div class="bar"><button class="pri" id="newBtn">＋ 派任務</button><button id="chgBtn">換通行碼</button><button id="outBtn">這台裝置上鎖</button></div>
@@ -365,8 +366,8 @@ function renderPanel(){const tp=document.getElementById('tp');if(!tp)return;
  const L=[...TASKS].sort((a,b)=>ST_ORDER.indexOf(a.狀態)-ST_ORDER.indexOf(b.狀態));
  tp.querySelector('.ls').innerHTML=L.length?L.map(t=>'<div class="tk" style="border-left-color:'+(ST_COLOR[t.狀態]||'#ccc')+'"><div class="t">'+esc(t.標題)+'</div><div><span class="st" style="background:'+(ST_COLOR[t.狀態]||'#ccc')+'">'+esc(t.狀態)+'</span><span class="m">'+esc(t.id)+'</span></div><div class="m">'+(t.內容?'<div class="bd">'+esc(t.內容)+'</div>':'')+'指派給：'+esc(t.派給||'-')+'　接手：'+esc(t.接手||'（還沒人接）')+'　驗收：'+esc(t.驗收||'-')+(t.成品?'<br>成品：'+esc(t.成品):'')+'</div></div>').join(''):'<p style="color:#777;text-align:center">'+(TASK_INFO.ok?'板子是空的':esc(TASK_INFO.err||'讀不到任務資料'))+'</p>';
  tp.querySelector('.ft').textContent=(TASK_INFO.stale?'⚠ status.json 太久沒更新，這份清單可能是舊的。':'')+'只列你派出的單，每 10 秒更新。';}
-let OPENED_AT=0;function openPanel(){OPENED_AT=performance.now();showLock();renderPanel();document.getElementById('tp').classList.add('open');}
-function closePanel(){document.getElementById('tp').classList.remove('open');PENDING_CHAT=null;updBtnDot();}
+let OPENED_AT=0;function openPanel(){OPENED_AT=performance.now();showLock();renderPanel();document.getElementById('tp').classList.add('open');document.body.classList.add('tpOpen');}
+function closePanel(){document.getElementById('tp').classList.remove('open');document.body.classList.remove('tpOpen');PENDING_CHAT=null;updBtnDot();}
 document.getElementById('boardBtn').onclick=openPanel;document.querySelector('#tp .x').onclick=closePanel;
 document.getElementById('tp').addEventListener('click',e=>{if(performance.now()-OPENED_AT<450){e.stopPropagation();e.preventDefault();}},true);// 手機點小人/告示板後的殘留 click 不要誤點面板
 document.getElementById('tp').addEventListener('click',e=>{if(e.target.id==='tp')closePanel();});addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
@@ -411,7 +412,7 @@ const hm=ts=>new Date(ts).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-d
 function renderChat(){const bar=document.getElementById('chTo');if(!targets().includes(CHAT_TO))CHAT_TO='全體';const G=grp(CHAT_TO);
  bar.innerHTML=targets().map(n=>'<button type="button" class="pick'+(n===CHAT_TO?' on':'')+'" data-n="'+esc(n)+'"><i class="avw">'+avatar(n,'av')+(n!==CHAT_TO&&unread(n)?'<b class="dot"></b>':'')+'</i><span>'+esc(tName(n))+'</span></button>').join('')
   +'<button type="button" class="pick newg" id="gNew"><i class="avw"><span class="av tx">＋</span></i><span>建立群組</span></button>';
- bar.querySelectorAll('.pick[data-n]').forEach(b=>b.onclick=()=>{CHAT_TO=b.dataset.n;renderChat();});document.getElementById('gNew').onclick=()=>openGroup(null);const on=bar.querySelector('.pick.on');if(on)on.scrollIntoView({block:'nearest',inline:'center'});
+ bar.querySelectorAll('.pick[data-n]').forEach(b=>b.onclick=()=>{CHAT_TO=b.dataset.n;focusChar(CHAT_TO);renderChat();});document.getElementById('gNew').onclick=()=>openGroup(null);const on=bar.querySelector('.pick.on');if(on)on.scrollIntoView({block:'nearest',inline:'center'});
  document.getElementById('chHd').textContent=G?G.name+'（學長、'+G.members.join('、')+'）':CHAT_TO==='全體'?'全體群聊（所有夥伴都看得到）':'和 '+CHAT_TO+' 的對話';document.getElementById('gMg').hidden=!G;
  document.getElementById('chT').placeholder=G?'傳訊息到「'+G.name+'」…':CHAT_TO==='全體'?'傳訊息到全體…':'傳訊息給 '+CHAT_TO+'…';
  const L=CHAT.filter(m=>inConv(m,CHAT_TO));const box=document.getElementById('chL');
@@ -444,7 +445,9 @@ function charAt(sx,sy){let best=null,bd=1e9;for(const c of chars){const h=60*dep
  const cx=(c.x-cam.x)*cam.z+innerWidth/2,cy=(c.y-h*0.45-cam.y)*cam.z+innerHeight/2;
  const rx=Math.max(30,h*0.35*cam.z),ry=Math.max(34,h*0.6*cam.z);const d=((sx-cx)/rx)**2+((sy-cy)/ry)**2;if(d<=1&&d<bd){bd=d;best=c;}}return best;}
 let PENDING_CHAT=null;
-function openChatWith(n){CHAT_TO=n;if(!pass()){PENDING_CHAT=n;openPanel();setTimeout(()=>document.getElementById('lkp').focus(),50);return;}
+// 點小人/選聊天對象：鏡頭平滑移到該角色；手機直式時把角色放在畫面上方（聊天面板在下方）
+function focusChar(n){const c=chars.find(o=>o.name===n);if(!c)return;const z=Math.max(cam.z,fitZ()*2.5);camT.z=z;camT.x=c.x;camT.y=c.y-30+(isPortrait()?innerHeight*0.28/z:0);clampCam(camT);}
+function openChatWith(n){focusChar(n);CHAT_TO=n;if(!pass()){PENDING_CHAT=n;openPanel();setTimeout(()=>document.getElementById('lkp').focus(),50);return;}
  openPanel();setTab('chat');}
 function anyUnread(){const open=document.getElementById('tp').classList.contains('open')&&TAB==='chat';return !!pass()&&targets().some(n=>!(open&&n===CHAT_TO)&&unread(n));}
 function updBtnDot(){document.getElementById('boardBtn').classList.toggle('new',anyUnread());}
