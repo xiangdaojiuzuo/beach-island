@@ -81,7 +81,9 @@ body.tpOpen #uiBtn,body.tpOpen #ui{display:none!important}
  #lk{padding:6px 14px;overflow:auto}}
 .sd{position:absolute;right:0;bottom:0;width:12px;height:12px;border-radius:50%;border:2px solid #fffaf0;box-sizing:border-box;background:#9e9e9e}.sd.w{background:#ff8a00}.sd.r{background:#8bc34a}#chSt{font-size:12px;padding:1px 8px;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55vw}#chSt.w{background:#ffe3c2;color:#b85a00}#chSt.r{background:#e6f2dc;color:#4b7a2a}
 @media(orientation:landscape) and (max-height:520px){.sd{width:10px;height:10px}#chTo .pick{gap:0}#chTo .pick span{font-size:10px;line-height:1.1}#chSt{font-size:11px}}
-</style></head><body><canvas id="c"></canvas><button id="home">🏝 回到全景</button><button id="boardBtn">📋 任務板</button><button id="infoBtn" aria-label="狀態說明">ℹ️</button><button id="fsBtn" type="button" hidden>⛶ 全螢幕</button>
+#sndBtn{position:fixed;left:372px;top:10px;font-size:14px;padding:6px 10px;border-radius:8px;border:0;background:rgba(255,255,255,.9);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:5}
+@media(max-width:700px){#sndBtn{left:10px;top:52px}}
+</style></head><body><canvas id="c"></canvas><button id="home">🏝 回到全景</button><button id="boardBtn">📋 任務板</button><button id="infoBtn" aria-label="狀態說明">ℹ️</button><button id="fsBtn" type="button" hidden>⛶ 全螢幕</button><button id="sndBtn" type="button" aria-label="背景音樂開關" title="背景音樂">🔇</button>
 <div id="tp" role="dialog" aria-label="任務告示板"><div class="box"><div class="hd"><h2>📋 任務告示板</h2><button class="x" aria-label="關閉">✕</button></div><div id="lk" hidden><p>🔒 任務板已上鎖。解鎖後這台裝置會記住登入 30 天（只存登入憑證，不存通行碼）；按「登出」即清除。</p><form id="lkf"><input id="lkp" type="password" autocomplete="current-password" placeholder="通行碼"><div class="err" id="lke"></div><button class="pri" type="submit">解鎖</button></form></div>
 <div id="un" hidden><div class="tabs"><button id="tabTask" class="on">📋 任務</button><button id="tabChat">💬 聊天</button></div><div id="taskV"><div class="bar"><button class="pri" id="newBtn">＋ 派任務</button><button id="chgBtn">換通行碼</button><button id="outBtn">這台裝置上鎖</button></div>
 <form id="tf" hidden><label>標題（可不填，會自動取內容前 15 字）<input id="tfT" maxlength="80"></label><label>內容<textarea id="tfB" maxlength="1000"></textarea></label><label>指派給<select id="tfA"></select></label><div class="err" id="tfe"></div><button class="pri" type="submit">送出</button> <button type="button" id="tfC">取消</button></form>
@@ -247,7 +249,7 @@ function update(c,dt){c.t+=dt;
  else{if(c.anim==='walk'){c.anim='idle';c.t=0;}}
 }
 function drawMina(c){const M=DATA.mina,s=55/245*2*depthScale(c.y);// atlas是原圖0.5倍
- if(c.anim!=='walk'&&IMG.mina_hd){const im=IMG.mina_hd,hh=56*depthScale(c.y),k=hh/im.height,sq=1+0.012*Math.sin(c.t*2);ctx.save();ctx.translate(c.x,c.y);ctx.scale(c.face*k,k*sq);ctx.drawImage(im,-im.width/2,-im.height);ctx.restore();return 62*depthScale(c.y);}// 2026-11-01 站著不動＝HD 重繪（砲塔在身後）；走路仍用遊戲動畫
+ if(c.anim!=='walk'&&IMG.mina_hd&&!looking(c)){const im=IMG.mina_hd,hh=56*depthScale(c.y),k=hh/im.height,sq=1+0.012*Math.sin(c.t*2);ctx.save();ctx.translate(c.x,c.y);ctx.scale(c.face*k,k*sq);ctx.drawImage(im,-im.width/2,-im.height);ctx.restore();return 62*depthScale(c.y);}// 2026-11-01 站著不動＝HD 重繪（砲塔在身後）；走路仍用遊戲動畫
  let set='idle',fps=12,ox=88,oy=172;if(c.anim==='walk'){set='walk';fps=15*SPEED_MUL;}else{const cyc=Math.floor(c.t/8)%2;if(cyc)set='idle2',ox=88-11.5,oy=169;}
  const fr=M.frames[set],i=fr[Math.floor(c.t*fps)%fr.length],sx=(i%M.cols)*M.cell,sy=Math.floor(i/M.cols)*M.cell;
  ctx.save();ctx.translate(c.x,c.y);ctx.scale(c.face*s/1,s);ctx.drawImage(IMG.mina,sx,sy,M.cell,M.cell,-ox,-oy,M.cell,M.cell);ctx.restore();return 62*depthScale(c.y);}
@@ -258,6 +260,7 @@ function drawMumu(c){const s=58/198*depthScale(c.y);let row=0,col=0;
  else if(c.anim==='walk'){row=c.face>0?1:2;col=Math.floor(c.t*12*SPEED_MUL)%8;}
  else if(c.once){const n=c.once==='wave'?4:5,fps=c.once==='wave'?6:8,k=Math.floor(c.t*fps);row=c.once==='wave'?3:4;
   const total=c.once==='wave'?n*2:n;if(k>=total){c.once=null;c.t=0;}else col=k%n;}
+ else if(looking(c)){row=9;col=1;}
  else if(IMG.mumu_hd){const im=IMG.mumu_hd,hh=58*depthScale(c.y),k=hh/im.height,sq=1+0.012*Math.sin(c.t*2.2);ctx.save();ctx.translate(c.x,c.y+2);ctx.scale(c.face*k,k*sq);ctx.drawImage(im,-im.width/2,-im.height);ctx.restore();return 60*depthScale(c.y);}// 2026-11-01 待機＝HD 重繪
  else{// 待機：大多站立循環，偶爾依朝向停在「看向」格(不循環)
   const ph=c.t%10;if(ph>7){row=c.face>0?10:9;col=c.face>0?2:2;}else{row=0;col=Math.floor(c.t*5)%6;}}
@@ -348,11 +351,22 @@ let last=0;function frame(ts){const dt=Math.min(0.05,(ts-last)/1000||0);last=ts;
  ctx.drawImage(IMG.cat,ct.layer_top_left[0]-ct.bottom_center[0],ct.layer_top_left[1]-ct.bottom_center[1]-4);ctx.restore();
  const hs={};const items=[...chars.map(c=>({k:c.sitting?c.sitting.seat.sy+10:c.y,c})),...DATA.occ.map(o=>({k:o.base,o})),{k:BOARD.y+BOARD.h,bd:1}].sort((a,b)=>a.k-b.k);
  items.forEach(it=>{if(it.bd){drawBoard(ts);return;}if(it.o){ctx.drawImage(IMG['occ_'+it.o.name],it.o.x,it.o.y);return;}const c=it.c;if(c.sitting){hs[c.id]=drawSit(c);return;}ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(c.x,c.y,9*depthScale(c.y),3*depthScale(c.y),0,0,7);ctx.fill();
-  hs[c.id]=c.id==='mina'?drawMina(c):c.id==='mumu'?drawMumu(c):drawTeam(c);});
+  const L=looking(c);if(L){ctx.save();const ds=depthScale(c.y);ctx.translate(c.x,c.y);ctx.rotate(c.face*(0.10+0.03*Math.sin(c.t*3)));ctx.translate(-c.x,-c.y-1.5*ds*Math.abs(Math.sin(c.t*1.6)));}
+  hs[c.id]=c.id==='mina'?drawMina(c):c.id==='mumu'?drawMumu(c):drawTeam(c);if(L)ctx.restore();});
  const TAGS=[];// 名牌不互蓋：由前往後放，撞到已放的名牌就往上疊一格（最多 4 格）
  for(const c of [...chars].sort((a,b)=>b.y-a.y)){const fs=Math.max(7,11/Math.sqrt(cam.z/fitZ()));ctx.font='bold '+fs+'px sans-serif';ctx.textAlign='center';let ty=c.y-hs[c.id]-4;
-  const w=ctx.measureText(c.label).width+6;for(let k=0;k<4&&TAGS.some(r=>Math.abs(r[0]-c.x)<(r[2]+w)/2+1&&Math.abs(r[1]-ty)<fs+4);k++)ty-=fs+4;TAGS.push([c.x,ty,w]);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(c.x-w/2,ty-fs,w,fs+3);ctx.fillStyle='#fff';ctx.fillText(c.label,c.x,ty);}
- if(ts%500<20)refreshUI();requestAnimationFrame(frame);}
+  const w=ctx.measureText(c.label).width+6;for(let k=0;k<4&&TAGS.some(r=>Math.abs(r[0]-c.x)<(r[2]+w)/2+1&&Math.abs(r[1]-ty)<fs+4);k++)ty-=fs+4;TAGS.push([c.x,ty,w]);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(c.x-w/2,ty-fs,w,fs+3);ctx.fillStyle='#fff';ctx.fillText(c.label,c.x,ty);const bb=bubbleOf(c);if(bb){const bf=fs*1.15;ctx.font='bold '+bf+'px sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"';const bw=ctx.measureText(bb).width+8,by=ty-fs-6-bf*0.2+Math.sin(performance.now()/250)*1;ctx.fillStyle=bb==='📋'||bb==='✋接單'?'rgba(255,236,150,.97)':'rgba(255,255,255,.95)';ctx.beginPath();ctx.roundRect(c.x-bw/2,by-bf,bw,bf+5,4);ctx.fill();ctx.beginPath();ctx.moveTo(c.x-3,by+5);ctx.lineTo(c.x+3,by+5);ctx.lineTo(c.x,by+9);ctx.fill();ctx.fillStyle='#333';ctx.fillText(bb,c.x,by+1);}}
+ drawNotice(ts);if(ts%500<20)refreshUI();requestAnimationFrame(frame);}
+function drawNotice(ts){const N=NOTICE;if(!N)return;let a=Math.min(1,(ts-N.t0)/300);if(N.fade){a=Math.max(0,1-(ts-N.fade)/1200);if(!a){NOTICE=null;return;}}
+ const zr=cam.z/fitZ(),s=Math.max(0.55,1.6/Math.sqrt(zr)),cx=BOARD.x+BOARD.w/2,fy=BOARD.y-62*s/1.6-24*s+Math.sin(ts/350)*2.2*s,blink=((ts-N.t0)%1600)<180?1.12:1;
+ ctx.save();ctx.globalAlpha=a;ctx.translate(cx,fy);ctx.scale(s*blink,s*blink);// 遊戲任務 NPC 式黃色驚嘆號（畫布繪製，黑邊）
+ ctx.lineJoin='round';ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(1.5,15,6,2,0,0,7);ctx.fill();
+ ctx.beginPath();ctx.moveTo(-6,-22);ctx.lineTo(6,-22);ctx.lineTo(3.2,4);ctx.lineTo(-3.2,4);ctx.closePath();
+ ctx.lineWidth=3.2;ctx.strokeStyle='#111';ctx.stroke();ctx.fillStyle='#ffd400';ctx.fill();
+ ctx.beginPath();ctx.arc(0,11,4.4,0,7);ctx.stroke();ctx.fill();
+ ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.moveTo(-3.6,-20);ctx.lineTo(-1.2,-20);ctx.lineTo(-1.8,-6);ctx.lineTo(-2.8,-6);ctx.closePath();ctx.fill();
+ ctx.restore();}
+window.ISLAND_NOTICE=()=>NOTICE;
 // ---- 任務告示板（小像素圖層疊在廣場中央樹台前緣；不加路線、不改走位規則，看板位置用既有節點 plaza_s）----
 const BOARD={x:682,y:460,w:36,h:32,front:'plaza_s'};
 const ST_COLOR={'待接':'#ffd84a','進行中':'#4aa3ff','卡住':'#ff5a5a','待驗收':'#b57cff','完成':'#5fd068'};
@@ -366,17 +380,42 @@ function who(n){n=n||'';if(n.includes('米娜'))return 'mina';if(n.includes('沐
 function onTasks(t,stale){if(!t||!Array.isArray(t.items)){TASK_INFO={ok:false,err:t&&t.error||'讀不到任務資料'};TASKS=[];renderPanel();return;}
  TASKS=t.items;TASK_INFO={ok:t.ok!==false,stale:!!stale,total:t.total,err:t.error};
  const now={};for(const x of TASKS)now[x.id]=x;
- if(false&&prevTasks){for(const x of TASKS){const p=prevTasks[x.id];const c=chars.find(c=>c.id===who(x.接手));if(!c)continue;
-  const fresh=(x.狀態==='進行中'&&(!p||p.狀態==='待接'||p.接手!==x.接手))||(x.狀態==='待接'&&(!p||p.狀態!=='待接'||p.接手!==x.接手));
-  if(fresh)visitBoard(c);}}
+ if(prevTasks){/* 2026-11-01 boardgather：新單→全員到告示板；待接→進行中→只有接手人去告示板再回工位 */let gather=null;const claim=[];
+  for(const x of TASKS){const p=prevTasks[x.id];const c=chars.find(c=>c.id===who(x.接手||x.派給));
+   if(!p&&x.狀態!=='完成'){gather=gather||{owners:[]};if(c)gather.owners.push(c);}
+   else if(p&&p.狀態==='待接'&&x.狀態==='進行中'&&c)claim.push(c);}
+  if(gather)gatherBoard(gather.owners.concat(claim));else claim.forEach(c=>visitBoard(c,'claim'));}
  prevTasks=now;renderPanel();}
 // 角色走到告示板前（用原本的 shortest 走既有路線），停一下再回自己的工位
-function visitBoard(c){if(!c)return;leaveSeat(c);c.wandering=false;c.visit={phase:'go',until:0};const from=c.path.length?c.path[0]:c.node;const bf=pickBoard(c);const p=shortest(from,bf,c);
- c.path=c.path.length?p:p.slice(1);if(!c.path.length&&c.node!==bf)c.path=[bf];refreshUI();}
+// role: 'claim'＝接單者（優先正前方中段，看完回工位）；'look'＝旁觀者（看完回休息閒晃）；站不下的先在外圍 wait，前面空出再上前
+const BOARD_C=[700,514];
+// 2026-11-01 boardgather v2：告示板正前方固定半圓兩排站位（緊貼告示板，不用廣場空位池）；0 號＝接單者正中
+const GATHER_SLOTS=[[700,514],[676,514],[724,514],[652,515],[748,515],[688,529],[712,529],[628,516],[772,516],[664,529],[736,529],[604,506],[796,506],[640,529],[760,529]];
+const GATHER_WAIT=[[578,512],[822,512],[568,494],[832,494],[592,478],[808,478],[659,548],[818,548]];// 外圍候補：告示板兩側廣場邊緣與兩道樓梯口
+const GS={};// slot index -> char id
+function freeSlot(c,list,pre,skip0){for(let i=skip0?1:0;i<list.length;i++){const key=pre+i;if(GS[key]&&GS[key]!==c.id)continue;if(!walkable(list[i][0],list[i][1]))continue;return i;}return -1;}
+function relSlot(c){for(const k in GS)if(GS[k]===c.id)delete GS[k];}
+function boardSpot(c,role){relSlot(c);let i=role==='claim'?(GS.s0&&GS.s0!==c.id?freeSlot(c,GATHER_SLOTS,'s',true):0):freeSlot(c,GATHER_SLOTS,'s',true);
+ if(i>=0){GS['s'+i]=c.id;return {k:setDyn('db_'+c.id,GATHER_SLOTS[i]),near:true};}
+ i=freeSlot(c,GATHER_WAIT,'w');if(i>=0){GS['w'+i]=c.id;return {k:setDyn('db_'+c.id,GATHER_WAIT[i]),near:false};}
+ const q=altSpot(c,[700,560])||farSpot(c,[700,540]);return {k:q?setDyn('db_'+c.id,q):(c.path.length?c.path[c.path.length-1]:c.node),near:false};}
+function routeTo(c,k){const from=c.path.length?c.path[0]:c.node;const p=shortest(from,k,c);c.path=c.path.length?p:p.slice(1);if(!c.path.length&&c.node!==k)c.path=[k];}
+function visitBoard(c,role){if(!c)return;role=role||'claim';leaveSeat(c);c.wandering=false;c.waitPlaza=false;c.manualUntil=Math.max(c.manualUntil,performance.now()+40000);
+ const s=boardSpot(c,role);c.visit={phase:s.near?'go':'wait',until:0,role};routeTo(c,s.k);refreshUI();}
+let NOTICE=null;// 2026-11-01 新任務提醒招牌：聚集時顯示，接單者離開告示板後淡出
+function gatherBoard(owners){if(window.ISLAND_DING)ISLAND_DING();NOTICE={t0:performance.now(),fade:0,claim:owners.length>0};if(!owners.length)setTimeout(()=>{if(NOTICE&&!NOTICE.fade)NOTICE.fade=performance.now();},9000);const ids=new Set(owners.map(o=>o.id));// 接單者先佔正中，其他人依距離先到先站，擠不下的去外圍候補
+ owners.forEach(c=>visitBoard(c,'claim'));
+ chars.filter(c=>!ids.has(c.id)).sort((a,b)=>Math.hypot(a.x-700,a.y-514)-Math.hypot(b.x-700,b.y-514)).forEach(c=>visitBoard(c,'look'));}
+window.ISLAND_GATHER=gatherBoard;
+function faceBoard(c){c.face=Math.abs(c.x-700)<6?c.face:(c.x<700?1:-1);}
 function tickVisit(c,ts){const v=c.visit;if(!v||c.path.length)return;
- if(v.phase==='go'){v.phase='look';v.until=ts+2500;c.face=c.x<BOARD.x+BOARD.w/2?1:-1;}
- else if(v.phase==='look'&&ts>v.until){v.phase='back';goTo(c,'work');}
+ if(v.phase==='wait'){faceBoard(c);if(!v.retry||ts>v.retry){v.retry=ts+700;const i=freeSlot(c,GATHER_SLOTS,'s',true);if(i>=0){relSlot(c);GS['s'+i]=c.id;v.phase='go';routeTo(c,setDyn('db_'+c.id,GATHER_SLOTS[i]));}}return;}
+ if(v.phase==='go'){v.phase='look';v.until=ts+(v.role==='claim'?6500:4000+Math.random()*1000);faceBoard(c);}
+ else if(v.phase==='look'){faceBoard(c);if(ts>v.until){relSlot(c);v.phase='back';if(v.role==='claim'){if(NOTICE&&!NOTICE.fade)NOTICE.fade=ts;c.manualUntil=performance.now()+20000;goTo(c,'work');}else{goTo(c,'rest');c.wanderAt=ts+600;c.visit=null;}}}
  else if(v.phase==='back'){c.visit=null;lastStatus='';}}// 回到工位後，下一次讀 status.json 再照真實狀態走
+// 看板中的姿勢：身體微微前傾朝告示板、輕點頭（不用平常待機的呼吸姿勢）
+function looking(c){return c.visit&&!c.path.length&&(c.visit.phase==='look'||c.visit.phase==='wait');}
+function bubbleOf(c){const v=c.visit;if(!v)return '';if(v.role==='claim')return v.phase==='back'?'📋':(looking(c)?'✋接單':'');if(v.phase==='look'&&!c.path.length)return '👀';if(v.phase==='wait'&&!c.path.length)return '？';return '';}
 function drawBoard(ts){ctx.save();ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(BOARD.x+BOARD.w/2,BOARD.y+BOARD.h,15,3,0,0,7);ctx.fill();
  const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(IMG.board,BOARD.x,BOARD.y);
  const n=boardNotes(),max=12;n.slice(0,max).forEach((t,i)=>{const col=i%4,row=Math.floor(i/4),x=BOARD.x+2+col*8,y=BOARD.y+2+row*7;
@@ -519,4 +558,19 @@ function updChatSt(){try{const bar=document.getElementById('chTo');if(!bar)retur
  const e=document.getElementById('chSt'),c=chChar(CHAT_TO);if(!c||grp(CHAT_TO)||CHAT_TO==='全體'){e.hidden=true;return;}const w=c.state==='work',tk=w?chTask(CHAT_TO):'';e.hidden=false;e.className=w?'w':'r';e.textContent=w?'🟠 工作中'+(tk?'：'+tk:''):'🟢 休息中';e.title=e.textContent;}catch(err){}}
 setInterval(updChatSt,2000);
 </script>
-</body></html>
+<script>
+// 2026-11-01 背景音樂：海浪＋輕吉他循環、新任務叮一聲。預設靜音；選擇記在 localStorage，但每次開啟仍需一次使用者觸碰才發聲（手機自動播放限制）
+(function(){const B='assets/audio/',VOL={guitar:0.35,waves:0.25,ding:0.6};let ac=null,buf={},src={},gain=null,on=localStorage.getItem('island_sound')==='on',started=false;
+ const btn=document.getElementById('sndBtn');function ui(){btn.textContent=on?'🔊':'🔇';btn.title=on?'背景音樂：開（點一下靜音）':'背景音樂：關（點一下播放）';}ui();
+ async function load(n,f){if(buf[n])return buf[n];const r=await fetch(B+f);buf[n]=await ac.decodeAudioData(await r.arrayBuffer());return buf[n];}
+ async function ensure(){if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();gain=ac.createGain();gain.connect(ac.destination);}if(ac.state==='suspended')await ac.resume();}
+ async function loopStart(){if(started)return;started=true;try{const [g,w]=await Promise.all([load('guitar','guitar_forest_charm.mp3'),load('waves','waves_loop.mp3')]);
+  for(const [n,b] of [['guitar',g],['waves',w]]){const s=ac.createBufferSource(),v=ac.createGain();s.buffer=b;s.loop=true;v.gain.value=VOL[n];s.connect(v).connect(gain);s.start();src[n]=s;}}catch(e){started=false;console.warn('audio',e);}}
+ async function setOn(v){on=v;localStorage.setItem('island_sound',on?'on':'off');ui();if(on){await ensure();gain.gain.value=1;loopStart();}else if(ac){ac.suspend();}}
+ btn.addEventListener('click',e=>{e.stopPropagation();setOn(!on);});
+ // 上次選了開：第一次觸碰/點擊畫面時自動開始
+ const first=()=>{removeEventListener('pointerdown',first,true);removeEventListener('keydown',first,true);if(on)setOn(true);};addEventListener('pointerdown',first,true);addEventListener('keydown',first,true);
+ document.addEventListener('visibilitychange',()=>{if(!ac||!on)return;if(document.hidden)ac.suspend();else ac.resume();});
+ window.ISLAND_DING=async function(){if(!on||!ac||ac.state!=='running')return;try{const b=await load('ding','ding.mp3'),s=ac.createBufferSource(),v=ac.createGain();s.buffer=b;v.gain.value=VOL.ding;s.connect(v).connect(gain);s.start();}catch(e){}};
+ window.ISLAND_SOUND={get on(){return on},get state(){return ac&&ac.state},setOn};})();
+</script></body></html>
