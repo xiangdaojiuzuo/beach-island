@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0b3a5a"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icon192.png">
 <title>海邊小島</title><style>
 #c{touch-action:none}body.asMumu #chgBtn,body.asMumu #gNew,body.asMumu #gMg{display:none!important}html,body{margin:0;height:100%;background:#0b3a5c;overflow:hidden;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
 canvas{display:block;width:100vw;height:100vh;cursor:grab}canvas.drag{cursor:grabbing}
@@ -62,7 +62,11 @@ canvas{display:block;width:100vw;height:100vh;cursor:grab}canvas.drag{cursor:gra
 body.uiMin #ui{display:none!important}body:not(.uiMin) #ui{bottom:62px}
 @media(max-width:700px){body:not(.uiMin) #ui{display:block;bottom:62px;max-height:50vh;overflow:auto}#uiBtn{right:8px;bottom:8px}}
 body.tpOpen #uiBtn,body.tpOpen #ui{display:none!important}
-</style></head><body><canvas id="c"></canvas><button id="home">🏝 回到全景</button><button id="boardBtn">📋 任務板</button><button id="infoBtn" aria-label="狀態說明">ℹ️</button>
+#fsBtn{position:fixed;left:268px;top:10px;font-size:14px;padding:6px 12px;border-radius:8px;border:0;background:rgba(255,255,255,.9);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:5}#fsBtn[hidden]{display:none}
+@media(max-width:700px){#fsBtn{left:140px}}
+#ui{max-height:calc(100vh - 82px);max-height:calc(100dvh - 82px);overflow:auto;-webkit-overflow-scrolling:touch}
+@media(orientation:landscape) and (max-height:520px){body:not(.uiMin) #ui{max-height:calc(100vh - 122px);max-height:calc(100dvh - 122px);overflow:auto}}/* 橫向手機：面板頂端留在上方按鈕列下面 */
+</style></head><body><canvas id="c"></canvas><button id="home">🏝 回到全景</button><button id="boardBtn">📋 任務板</button><button id="infoBtn" aria-label="狀態說明">ℹ️</button><button id="fsBtn" type="button" hidden>⛶ 全螢幕</button>
 <div id="tp" role="dialog" aria-label="任務告示板"><div class="box"><div class="hd"><h2>📋 任務告示板</h2><button class="x" aria-label="關閉">✕</button></div><div id="lk" hidden><p>🔒 任務板已上鎖。解鎖後這台裝置會記住登入 30 天（只存登入憑證，不存通行碼）；按「登出」即清除。</p><form id="lkf"><input id="lkp" type="password" autocomplete="current-password" placeholder="通行碼"><div class="err" id="lke"></div><button class="pri" type="submit">解鎖</button></form></div>
 <div id="un" hidden><div class="tabs"><button id="tabTask" class="on">📋 任務</button><button id="tabChat">💬 聊天</button></div><div id="taskV"><div class="bar"><button class="pri" id="newBtn">＋ 派任務</button><button id="chgBtn">換通行碼</button><button id="outBtn">這台裝置上鎖</button></div>
 <form id="tf" hidden><label>標題（可不填，會自動取內容前 15 字）<input id="tfT" maxlength="80"></label><label>內容<textarea id="tfB" maxlength="1000"></textarea></label><label>指派給<select id="tfA"></select></label><div class="err" id="tfe"></div><button class="pri" type="submit">送出</button> <button type="button" id="tfC">取消</button></form>
@@ -372,7 +376,7 @@ const PEND={'進行中':'接單','卡住':'卡住','待驗收':'交件','approve
 function tkBtns(t){if(!pass()||!t.wid||t.狀態==='完成')return '';const b=[];
  if(t.派給===ME){if(t.狀態==='待接')b.push(['claim','接單']);if(['待接','進行中'].includes(t.狀態))b.push(['block','卡住'],['submit','交件']);}
  if(ME!=='學長'&&t.驗收===ME&&t.狀態==='待驗收')b.push(['approve','通過'],['reject','退回']);
- const p=t.待處理?'<div class="m tpend">⏳ 已送出「'+esc(PEND[t.待處理]||t.待處理)+'」，等本機套用</div>':(t.結果?'<div class="m">上次處理：'+esc(t.結果)+'</div>':'');
+ const p=t.待處理?'<div class="m tpend">⏳ 已送出「'+esc(PEND[t.待處理]||t.待處理)+'」，等本機套用</div>':(t.結果?(/^已退回：/.test(t.結果)?'<div class="m" style="color:#c0392b;font-weight:bold">↩ '+esc(t.結果)+'</div>':'<div class="m">上次處理：'+esc(t.結果)+'</div>'):'');
  if(!b.length)return p;return p+'<div class="tbtns">'+b.map(([a,l])=>'<button type="button" class="tb tb-'+a+'" data-wid="'+esc(t.wid)+'" data-act="'+a+'"'+(t.待處理?' disabled':'')+'>'+l+'</button>').join('')+'</div>';}
 async function taskAct(wid,a,btn){const ask={block:'卡住的原因？',submit:'交件說明（成品在哪、做了什麼）？',reject:'退回的原因？'}[a];let note='';
  if(ask){const v=prompt(ask);if(v===null)return;note=v.trim();if(!note){alert('要寫內容才能送出');return;}}
@@ -384,10 +388,17 @@ function renderPanel(){const tp=document.getElementById('tp');if(!tp)return;
  tp.querySelector('.lg').innerHTML=ST_ORDER.map(s=>'<span><i style="background:'+ST_COLOR[s]+'"></i>'+s+'</span>').join('');
  const L=[...TASKS].sort((a,b)=>ST_ORDER.indexOf(a.狀態)-ST_ORDER.indexOf(b.狀態));
  tp.querySelector('.ls').innerHTML=L.length?L.map(t=>'<div class="tk" style="border-left-color:'+(ST_COLOR[t.狀態]||'#ccc')+'"><div class="t">'+esc(t.標題)+'</div><div><span class="st" style="background:'+(ST_COLOR[t.狀態]||'#ccc')+'">'+esc(t.狀態)+'</span><span class="m">'+esc(t.id)+'</span></div><div class="m">'+(t.內容?'<div class="bd">'+esc(t.內容)+'</div>':'')+'指派給：'+esc(t.派給||'-')+'　接手：'+esc(t.接手||'（還沒人接）')+'　驗收：'+esc(t.驗收||'-')+(t.成品?'<br>成品：'+esc(t.成品):'')+'</div>'+tkBtns(t)+'</div>').join(''):'<p style="color:#777;text-align:center">'+(TASK_INFO.ok?'板子是空的':esc(TASK_INFO.err||'讀不到任務資料'))+'</p>';
- tp.querySelector('.ft').textContent=(TASK_INFO.stale?'⚠ status.json 太久沒更新，這份清單可能是舊的。':'')+'只列你派出的單，每 10 秒更新。';}
+ tp.querySelector('.ft').textContent=(TASK_INFO.stale?'⚠ status.json 太久沒更新，這份清單可能是舊的。':'')+(ME==='學長'?'列出小島上全部的單':'全部的單都會列出；跟你有關的（你派的或派給你的）才看得到內容和按鈕')+'，每 10 秒更新。';}
 let OPENED_AT=0;function openPanel(){OPENED_AT=performance.now();showLock();renderPanel();document.getElementById('tp').classList.add('open');document.body.classList.add('tpOpen');}
 function closePanel(){document.getElementById('tp').classList.remove('open');document.body.classList.remove('tpOpen');PENDING_CHAT=null;updBtnDot();}
-document.getElementById('boardBtn').onclick=openPanel;document.querySelector('#tp .x').onclick=closePanel;
+document.getElementById('boardBtn').onclick=openPanel;
+// 2026-11-01 全螢幕：支援 Fullscreen API 就切換；iPhone Safari 不支援 → 改成提示「加入主畫面」；已從主畫面開啟就隱藏
+(()=>{const b=document.getElementById('fsBtn'),de=document.documentElement,req=de.requestFullscreen||de.webkitRequestFullscreen,ext=document.exitFullscreen||document.webkitExitFullscreen,cur=()=>document.fullscreenElement||document.webkitFullscreenElement,
+ standalone=matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches||navigator.standalone;if(standalone&&!req)return;
+ const lab=()=>{b.textContent=cur()?'⛶ 退出全螢幕':'⛶ 全螢幕';};b.hidden=false;
+ if(!req){b.textContent='⛶ 全螢幕？';b.onclick=()=>alert('這支手機的瀏覽器不支援網頁全螢幕。\n請按「分享」→「加入主畫面」，之後從主畫面圖示打開就是全螢幕。');return;}
+ b.onclick=async()=>{try{if(cur())await ext.call(document);else await req.call(de,{navigationUI:'hide'});}catch(e){alert('無法切換全螢幕：'+(e.message||e));}lab();};
+ document.addEventListener('fullscreenchange',lab);document.addEventListener('webkitfullscreenchange',lab);lab();})();document.querySelector('#tp .x').onclick=closePanel;
 document.getElementById('tp').addEventListener('click',e=>{if(performance.now()-OPENED_AT<450){e.stopPropagation();e.preventDefault();}},true);// 手機點小人/告示板後的殘留 click 不要誤點面板
 document.getElementById('tp').addEventListener('click',e=>{if(e.target.id==='tp')closePanel();});addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
 // ---- 上鎖：通行碼只存在記憶體（關頁即清除），任務細節只從上鎖 API 拿 ----
@@ -400,7 +411,12 @@ function setMe(m){ME=m||'學長';document.body.classList.toggle('asMumu',!isBoss
 async function api(path,body){if(!API)throw new Error('沒有設定收件網址');const r=await fetch(API.replace(/\/$/,'')+'/island/api/'+path,{method:body?'POST':'GET',headers:Object.assign({'Content-Type':'application/json'},PASS?{'X-Island-Pass':PASS}:SESS?{'X-Island-Session':SESS}:{}),body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({ok:false,error:'回應格式錯誤'}));if(r.status===401){PASS='';setSess('');showLock();}return j;}
 function showLock(){const u=!!pass();document.getElementById('lk').hidden=u;document.getElementById('un').hidden=!u;}
-function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:x.last_result||((x.review_res||x.mumu_res||{}).result)||''};}
+function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:resText(x)};}
+// 2026-11-01 處理結果只在跟目前狀態相符時顯示（退回→「已退回：原因」；解除卡住後不再殘留「標記卡住」）
+function resText(x){const c=[];if(x.mumu_res)c.push({a:x.mumu_res.status,n:x.mumu_res.note,ts:x.mumu_res.ts||0,r:x.mumu_res.result});if(x.review_res)c.push({a:x.review_res.action,n:x.review_res.note,ts:x.review_res.ts||0,r:x.review_res.result});
+ if(!c.length&&(x.last_act||x.last_result))c.push({a:x.last_act||'',n:x.last_note||'',ts:0,r:x.last_result||''});if(!c.length)return '';c.sort((a,b)=>b.ts-a.ts);const L=c[0],st=x.status;
+ if(L.a==='reject')return st==='進行中'?'已退回：'+(L.n||'（沒寫原因）'):'';if(L.a==='approve')return st==='完成'?'驗收通過':'';
+ const want={'進行中':'進行中','卡住':'卡住','待驗收':'待驗收'}[L.a];if(want&&want!==st)return '';if(!L.a&&L.r&&((/已交件/.test(L.r)&&st!=='待驗收')||(/卡住/.test(L.r)&&st!=='卡住')))return '';return L.r||'';}
 async function lockedPoll(){if(!pass()){TASKS=[];renderPanel();return;}try{const j=await api('tasks');if(j.ok){PARTNERS=j.partners||PARTNERS;if((j.me||'學長')!==ME){setMe(j.me);if(TAB==='chat')renderChat();}onTasks({ok:true,items:j.items.map(mapT),total:j.items.length});}else onTasks({ok:false,error:j.error==='locked'?'通行碼失效，請重新輸入':j.error});}catch(e){onTasks({ok:false,error:'連不到收件服務'},true);}}
 document.getElementById('lkf').onsubmit=async e=>{e.preventDefault();const v=document.getElementById('lkp').value.trim(),er=document.getElementById('lke');er.textContent='確認中…';
  PASS=v;try{const j=await api('login',{});if(j.ok){if(j.session){setSess(j.session);PASS='';}er.textContent='';document.getElementById('lkp').value='';PARTNERS=j.partners;setMe(j.me);showLock();lockedPoll();chatPoll();if(PENDING_CHAT){CHAT_TO=PENDING_CHAT;PENDING_CHAT=null;setTab('chat');}}else{PASS='';er.textContent='通行碼不對';}}catch(x){PASS='';er.textContent='連不到收件服務';}};
