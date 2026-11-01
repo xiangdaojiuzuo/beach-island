@@ -83,6 +83,7 @@ body.tpOpen #uiBtn,body.tpOpen #ui{display:none!important}
 @media(orientation:landscape) and (max-height:520px){.sd{width:10px;height:10px}#chTo .pick{gap:0}#chTo .pick span{font-size:10px;line-height:1.1}#chSt{font-size:11px}}
 #sndBtn{position:fixed;left:372px;top:10px;font-size:14px;padding:6px 10px;border-radius:8px;border:0;background:rgba(255,255,255,.9);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:5}
 @media(max-width:700px){#sndBtn{left:10px;top:52px}}
+#tp .bub.ty{color:#777;font-style:italic;background:#f3f3f3}.tyd i{font-style:normal;animation:tyb 1.2s infinite;display:inline-block}.tyd i:nth-child(2){animation-delay:.2s}.tyd i:nth-child(3){animation-delay:.4s}@keyframes tyb{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
 </style></head><body><canvas id="c"></canvas><button id="home">🏝 回到全景</button><button id="boardBtn">📋 任務板</button><button id="infoBtn" aria-label="狀態說明">ℹ️</button><button id="fsBtn" type="button" hidden>⛶ 全螢幕</button><button id="sndBtn" type="button" aria-label="背景音樂開關" title="背景音樂">🔇</button>
 <div id="tp" role="dialog" aria-label="任務告示板"><div class="box"><div class="hd"><h2>📋 任務告示板</h2><button class="x" aria-label="關閉">✕</button></div><div id="lk" hidden><p>🔒 任務板已上鎖。解鎖後這台裝置會記住登入 30 天（只存登入憑證，不存通行碼）；按「登出」即清除。</p><form id="lkf"><input id="lkp" type="password" autocomplete="current-password" placeholder="通行碼"><div class="err" id="lke"></div><button class="pri" type="submit">解鎖</button></form></div>
 <div id="un" hidden><div class="tabs"><button id="tabTask" class="on">📋 任務</button><button id="tabChat">💬 聊天</button></div><div id="taskV"><div class="bar"><button class="pri" id="newBtn">＋ 派任務</button><button id="chgBtn">換通行碼</button><button id="outBtn">這台裝置上鎖</button></div>
@@ -415,7 +416,7 @@ function tickVisit(c,ts){const v=c.visit;if(!v||c.path.length)return;
  else if(v.phase==='back'){c.visit=null;lastStatus='';}}// 回到工位後，下一次讀 status.json 再照真實狀態走
 // 看板中的姿勢：身體微微前傾朝告示板、輕點頭（不用平常待機的呼吸姿勢）
 function looking(c){return c.visit&&!c.path.length&&(c.visit.phase==='look'||c.visit.phase==='wait');}
-function bubbleOf(c){const v=c.visit;if(!v)return '';if(v.role==='claim')return v.phase==='back'?'📋':(looking(c)?'✋接單':'');if(v.phase==='look'&&!c.path.length)return '👀';if(v.phase==='wait'&&!c.path.length)return '？';return '';}
+function bubbleOf(c){const v=c.visit;if(!v){try{const T=typingNames();if(T.all||T.s.has(c.name)||T.s.has((c.name||'').replace(/\s/g,'')))return '…';}catch(e){}return '';}if(v.role==='claim')return v.phase==='back'?'📋':(looking(c)?'✋接單':'');if(v.phase==='look'&&!c.path.length)return '👀';if(v.phase==='wait'&&!c.path.length)return '？';return '';}
 function drawBoard(ts){ctx.save();ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(BOARD.x+BOARD.w/2,BOARD.y+BOARD.h,15,3,0,0,7);ctx.fill();
  const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(IMG.board,BOARD.x,BOARD.y);
  const n=boardNotes(),max=12;n.slice(0,max).forEach((t,i)=>{const col=i%4,row=Math.floor(i/4),x=BOARD.x+2+col*8,y=BOARD.y+2+row*7;
@@ -509,16 +510,16 @@ function renderChat(){const bar=document.getElementById('chTo');if(!targets().in
  if(TAB==='chat'&&L.length){const sv=seenGet();sv[CHAT_TO]=Math.max(sv[CHAT_TO]||0,...L.map(m=>m.ts));localStorage.setItem(SEEN_LS,JSON.stringify(sv));}
  let pd='';box.innerHTML=L.length?L.map(m=>{const d=dLabel(m.ts),sep=d!==pd?'<div class="dsep"><span>'+d+'</span></div>':'';pd=d;return sep+(m.from===ME?'<div class="row me"><div class="bub">'+esc(m.text)+'</div><div class="tm">'+hm(m.ts)+'</div></div>'
   :'<div class="row"><div class="who">'+avatar(m.from,'av sm')+'</div><div><div class="nm">'+esc(m.from)+'</div><div class="bw"><div class="bub">'+esc(m.text)+'</div><div class="tm">'+hm(m.ts)+'</div></div></div></div>');}).join('')
-  :'<p class="empty">還沒有對話，打聲招呼吧</p>';
+  :'<p class="empty">還沒有對話，打聲招呼吧</p>';TY_KEY='';setTimeout(updTyping,0);
  requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight;});updBtnDot();}
-let CHAT_BUSY=false,CHAT_LAST=0,CHAT_FAST=0,CHAT_KICK=null;// 聊天輪詢：送出後 2 分鐘內每 3 秒，平常 10 秒；回到頁面立刻抓（1 秒去抖）；不重疊請求
-function chatTick(){if(document.hidden)return;const iv=Date.now()<CHAT_FAST?3000:10000;if(Date.now()-CHAT_LAST>=iv-200)chatPoll();}
+let CHAT_BUSY=false,CHAT_LAST=0,CHAT_FAST=0,CHAT_KICK=null;// 聊天輪詢：送出後 2 分鐘內每 2 秒（2026-11-01 由 3 秒加快），平常 10 秒；回到頁面立刻抓（1 秒去抖）；不重疊請求
+function chatTick(){if(document.hidden)return;const iv=Date.now()<CHAT_FAST?2000:10000;if(Date.now()-CHAT_LAST>=iv-200)chatPoll();}
 function chatKick(){if(document.hidden)return;clearTimeout(CHAT_KICK);CHAT_KICK=setTimeout(chatPoll,1000);}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)chatKick();});addEventListener('focus',chatKick);
 async function chatPoll(){if(!pass()||CHAT_BUSY)return;CHAT_BUSY=true;CHAT_LAST=Date.now();try{const j=await api('chat');if(j.ok){const ng=j.groups||[];const ch=JSON.stringify(j.items)!==JSON.stringify(CHAT)||JSON.stringify(ng)!==JSON.stringify(GROUPS);CHAT=j.items;GROUPS=ng;if(TAB==='chat'&&ch)renderChat();updBtnDot();}}catch(e){}finally{CHAT_BUSY=false;}}
 document.getElementById('tabTask').onclick=()=>setTab('task');document.getElementById('tabChat').onclick=()=>setTab('chat');
 document.getElementById('chF').onsubmit=async e=>{e.preventDefault();const i=document.getElementById('chT'),er=document.getElementById('chE');if(!i.value.trim())return;er.textContent='送出中…';
- const j=await api('chat',{to:CHAT_TO,text:i.value}).catch(()=>({ok:false,error:'連不到收件服務'}));if(j.ok){i.value='';er.textContent='';CHAT.push(j.item);renderChat();CHAT_FAST=Date.now()+120000;}else er.textContent=j.error||'送出失敗';};
+ const j=await api('chat',{to:CHAT_TO,text:i.value}).catch(()=>({ok:false,error:'連不到收件服務'}));if(j.ok){i.value='';er.textContent='';CHAT.push(j.item);renderChat();CHAT_FAST=Date.now()+120000;updTyping();}else er.textContent=j.error||'送出失敗';};
 // ---- 自訂群組：建立／改名／加減成員／刪除（刪除要在頁面上再確認一次）----
 let G_EDIT=null;const $=id=>document.getElementById(id);
 function openGroup(id){G_EDIT=id?grp(id):null;const g=G_EDIT;$('gSt').textContent=g?'群組設定':'建立群組';$('gOk').textContent=g?'儲存':'建立';$('gDl').hidden=!g;$('gCf').hidden=true;$('gE').textContent='';
@@ -557,6 +558,18 @@ function chTask(n){const L=(typeof TASKS!=='undefined'&&TASKS)||[];const g=(x,a,
 function updChatSt(){try{const bar=document.getElementById('chTo');if(!bar)return;bar.querySelectorAll('.pick[data-n]').forEach(b=>{const d=b.querySelector('.sd');if(!d)return;const c=chChar(b.dataset.n);if(!c){d.hidden=true;return;}const w=c.state==='work';d.hidden=false;d.className='sd '+(w?'w':'r');d.title=w?'工作中':'休息';});
  const e=document.getElementById('chSt'),c=chChar(CHAT_TO);if(!c||grp(CHAT_TO)||CHAT_TO==='全體'){e.hidden=true;return;}const w=c.state==='work',tk=w?chTask(CHAT_TO):'';e.hidden=false;e.className=w?'w':'r';e.textContent=w?'🟠 工作中'+(tk?'：'+tk:''):'🟢 休息中';e.title=e.textContent;}catch(err){}}
 setInterval(updChatSt,2000);
+// 2026-11-01 正在想提示：學長在某對話的最後一則還沒人回、3 分鐘內、且 Worker 已記夥伴讀到（seen_by 含 @read） → 顯示「X 看到了，正在想…」，對方人物頭上冒「…」
+const TYPING_MS=180000;
+function typingFor(conv){if(ME!=='學長')return null;const L=CHAT.filter(m=>inConv(m,conv));const m=L[L.length-1];if(!m||m.from!==ME||Date.now()-m.ts>TYPING_MS)return null;if(!(m.seen_by||[]).some(x=>String(x).startsWith('@read')))return null;// 2026-11-01 要等夥伴真的讀到（Worker 記 @read）才顯示
+ const G=grp(conv);return {conv,who:G||conv==='全體'?'大家':conv,members:G?G.members:conv==='全體'?null:[conv]};}
+let TYN=null,TYN_T=0;function typingNames(){if(TYN&&performance.now()-TYN_T<500)return TYN;TYN_T=performance.now();const s=new Set();let all=false;for(const n of targets()){const t=typingFor(n);if(!t)continue;if(!t.members)all=true;else t.members.forEach(x=>s.add(x));}return TYN={all,s};}
+let TY_KEY='';function updTyping(){const box=document.getElementById('chL');if(!box)return;const t=TAB==='chat'?typingFor(CHAT_TO):null;let r=document.getElementById('chTy');
+ if(!t){if(r)r.remove();TY_KEY='';return;}const k=t.conv+t.who;if(r&&TY_KEY===k)return;if(r)r.remove();TY_KEY=k;
+ r=document.createElement('div');r.id='chTy';r.className='row';r.innerHTML='<div class="who">'+(t.who==='大家'?'<span class="av sm tx all">全</span>':avatar(t.who,'av sm'))+'</div><div><div class="nm">'+esc(t.who)+'</div><div class="bw"><div class="bub ty">'+esc(t.who)+'看到了，正在想<span class="tyd"><i>.</i><i>.</i><i>.</i></span></div></div></div>';
+ const nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80;box.appendChild(r);if(nearBottom)box.scrollTop=box.scrollHeight;}
+setInterval(updTyping,1000);
+window.ISLAND_TYPING={typingFor,typingNames};
+
 </script>
 <script>
 // 2026-11-01 背景音樂：海浪＋輕吉他循環、新任務叮一聲。預設靜音；選擇記在 localStorage，但每次開啟仍需一次使用者觸碰才發聲（手機自動播放限制）
