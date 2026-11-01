@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0b3a5a"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icon192.png">
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0b3a5a"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icon192.png">
 <title>海邊小島</title><style>
 #c{touch-action:none}body.asMumu #chgBtn,body.asMumu #gNew,body.asMumu #gMg{display:none!important}html,body{margin:0;height:100%;background:#0b3a5c;overflow:hidden;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
 canvas{display:block;width:100vw;height:100vh;cursor:grab}canvas.drag{cursor:grabbing}
@@ -84,6 +84,11 @@ body.tpOpen #uiBtn,body.tpOpen #ui{display:none!important}
 #sndBtn{position:fixed;left:372px;top:10px;font-size:14px;padding:6px 10px;border-radius:8px;border:0;background:rgba(255,255,255,.9);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:5}
 @media(max-width:700px){#sndBtn{left:10px;top:52px}}
 #tp .bub.ty{color:#777;font-style:italic;background:#f3f3f3}.tyd i{font-style:normal;animation:tyb 1.2s infinite;display:inline-block}.tyd i:nth-child(2){animation-delay:.2s}.tyd i:nth-child(3){animation-delay:.4s}@keyframes tyb{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
+/* 2026-11-01 手機鍵盤：面板貼齊可見區（visualViewport），打字框永遠在鍵盤上方 */
+body.kbd #tp{inset:auto 0 auto 0;top:var(--vvt,0px);height:var(--vvh,100%);align-items:stretch}
+body.kbd #tp .box{max-height:none;height:100%;border-radius:0}
+body.kbd #chL{min-height:0}body.kbd #chTo,body.kbd #gMg{display:none}body.kbd #chHd{padding:2px;font-size:12px}
+body.kbd #chF{padding:4px 8px 6px}body.kbd #chF input{padding:6px 12px;font-size:16px}body.kbd #chF button{padding:4px 12px}
 </style></head><body><canvas id="c"></canvas><button id="home">🏝 回到全景</button><button id="boardBtn">📋 任務板</button><button id="infoBtn" aria-label="狀態說明">ℹ️</button><button id="fsBtn" type="button" hidden>⛶ 全螢幕</button><button id="sndBtn" type="button" aria-label="背景音樂開關" title="背景音樂">🔇</button>
 <div id="tp" role="dialog" aria-label="任務告示板"><div class="box"><div class="hd"><h2>📋 任務告示板</h2><button class="x" aria-label="關閉">✕</button></div><div id="lk" hidden><p>🔒 任務板已上鎖。解鎖後這台裝置會記住登入 30 天（只存登入憑證，不存通行碼）；按「登出」即清除。</p><form id="lkf"><input id="lkp" type="password" autocomplete="current-password" placeholder="通行碼"><div class="err" id="lke"></div><button class="pri" type="submit">解鎖</button></form></div>
 <div id="un" hidden><div class="tabs"><button id="tabTask" class="on">📋 任務</button><button id="tabChat">💬 聊天</button></div><div id="taskV"><div class="bar"><button class="pri" id="newBtn">＋ 派任務</button><button id="chgBtn">換通行碼</button><button id="outBtn">這台裝置上鎖</button></div>
@@ -586,4 +591,12 @@ window.ISLAND_TYPING={typingFor,typingNames};
  document.addEventListener('visibilitychange',()=>{if(!ac||!on)return;if(document.hidden)ac.suspend();else ac.resume();});
  window.ISLAND_DING=async function(){if(!on||!ac||ac.state!=='running')return;try{const b=await load('ding','ding.mp3'),s=ac.createBufferSource(),v=ac.createGain();s.buffer=b;v.gain.value=VOL.ding;s.connect(v).connect(gain);s.start();}catch(e){}};
  window.ISLAND_SOUND={get on(){return on},get state(){return ac&&ac.state},setOn};})();
-</script></body></html>
+</script><script>/* 2026-11-01 手機鍵盤跟隨 */(function(){const vv=window.visualViewport,coarse=matchMedia('(pointer:coarse)').matches;if(!coarse)return;
+const tp=document.getElementById('tp'),B=document.body;let raf=0;
+const inField=()=>{const a=document.activeElement;return a&&tp.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&a.type!=='checkbox'};
+function fit(){raf=0;const on=inField();B.classList.toggle('kbd',on);if(!on)return;const h=vv?vv.height:innerHeight,t=vv?vv.offsetTop:0;B.style.setProperty('--vvh',h+'px');B.style.setProperty('--vvt',t+'px');
+const a=document.activeElement;if(a&&a.id==='chT'){const L=document.getElementById('chL');if(L)L.scrollTop=L.scrollHeight}try{a.scrollIntoView({block:'nearest'})}catch(e){}}
+const q=()=>{if(!raf)raf=requestAnimationFrame(fit)};
+if(vv){vv.addEventListener('resize',q);vv.addEventListener('scroll',q)}addEventListener('resize',q);
+document.addEventListener('focusin',()=>{q();setTimeout(q,300);setTimeout(q,700)});document.addEventListener('focusout',()=>setTimeout(q,50));})();</script>
+</body></html>
