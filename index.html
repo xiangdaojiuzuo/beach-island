@@ -388,11 +388,14 @@ window.ISLAND_NOTICE=()=>NOTICE;
 const BOARD={x:682,y:460,w:36,h:32,front:'plaza_s'};
 const ST_COLOR={'待接':'#ffd84a','進行中':'#4aa3ff','卡住':'#ff5a5a','待驗收':'#b57cff','完成':'#5fd068'};
 const ST_ORDER=['卡住','待驗收','進行中','待接','完成'];
+// 2026-11-01 sort：同狀態內，未完成→新建的在上（created，沒有就看 T 編號大的在上）；完成→最近完成的在上（完成時間，沒有就 T 編號大的在上）
+function tNum(t){const m=String(t.id||'').match(/T(\d+)/i);return m?+m[1]:-1;}
+function taskCmp(a,b){const d=ST_ORDER.indexOf(a.狀態)-ST_ORDER.indexOf(b.狀態);if(d)return d;return (tNum(b)-tNum(a))||((b.建立||0)-(a.建立||0));}
 let TASKS=[],TASK_INFO={ok:false},prevTasks=null;
 // 2026-10-31 點地圖告示板開任務板：告示板本體＋上方兩塊草坪木招牌都算；手機上點擊範圍至少 56×56 螢幕 px
 const BOARD_HITS=[[BOARD.x,BOARD.y,BOARD.w,BOARD.h],[716,124,72,42],[1368,124,74,44]];
 function onBoard(wx,wy,minPx){const m=(minPx||56)/2/cam.z;return BOARD_HITS.some(([x,y,w,h])=>{const cx=x+w/2,cy=y+h/2,hw=Math.max(w/2+4,m),hh=Math.max(h/2+4,m);return Math.abs(wx-cx)<=hw&&Math.abs(wy-cy)<=hh;});}
-function boardNotes(){const done=TASKS.filter(t=>t.狀態==='完成').slice(-3);return TASKS.filter(t=>t.狀態!=='完成').concat(done);}
+function boardNotes(){const S=[...TASKS].sort(taskCmp),done=S.filter(t=>t.狀態==='完成').slice(0,3);return S.filter(t=>t.狀態!=='完成').concat(done);}
 function who(n){n=n||'';if(n.includes('米娜'))return 'mina';if(n.includes('沐沐'))return 'mumu';const c=chars.find(c=>c.sp&&n.replace(/\s/g,'').includes(c.name.replace(/\s/g,'')));return c?c.id:null;}
 function onTasks(t,stale){if(!t||!Array.isArray(t.items)){TASK_INFO={ok:false,err:t&&t.error||'讀不到任務資料'};TASKS=[];renderPanel();return;}
  TASKS=t.items;TASK_INFO={ok:t.ok!==false,stale:!!stale,total:t.total,err:t.error};
@@ -457,7 +460,7 @@ async function taskAct(wid,a,btn){const ask={block:'卡住的原因？',submit:'
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#tp .tb');if(!b||b.disabled)return;e.stopPropagation();taskAct(b.dataset.wid,b.dataset.act,b);});
 function renderPanel(){const tp=document.getElementById('tp');if(!tp)return;
  tp.querySelector('.lg').innerHTML=ST_ORDER.map(s=>'<span><i style="background:'+ST_COLOR[s]+'"></i>'+s+'</span>').join('');
- const L=[...TASKS].sort((a,b)=>ST_ORDER.indexOf(a.狀態)-ST_ORDER.indexOf(b.狀態));
+ const L=[...TASKS].sort(taskCmp);
  tp.querySelector('.ls').innerHTML=L.length?L.map(t=>'<div class="tk" style="border-left-color:'+(ST_COLOR[t.狀態]||'#ccc')+'"><div class="t">'+esc(t.標題)+'</div><div><span class="st" style="background:'+(ST_COLOR[t.狀態]||'#ccc')+'">'+esc(t.狀態)+'</span><span class="m">'+esc(t.id)+'</span></div><div class="m">'+(t.內容?'<div class="bd">'+esc(t.內容)+'</div>':'')+'指派給：'+esc(t.派給||'-')+'　接手：'+esc(t.接手||'（還沒人接）')+'　驗收：'+esc(t.驗收||'-')+(t.成品?'<br>成品：'+esc(t.成品):'')+'</div>'+subHtml(t)+tkBtns(t)+'</div>').join(''):'<p style="color:#777;text-align:center">'+(TASK_INFO.ok?'板子是空的':esc(TASK_INFO.err||'讀不到任務資料'))+'</p>';
  tp.querySelector('.ft').textContent=(TASK_INFO.stale?'⚠ status.json 太久沒更新，這份清單可能是舊的。':'')+(ME==='學長'?'列出小島上全部的單':'全部的單都會列出；跟你有關的（你派的或派給你的）才看得到內容和按鈕')+'，每 10 秒更新。';}
 let OPENED_AT=0;function openPanel(){OPENED_AT=performance.now();showLock();renderPanel();document.getElementById('tp').classList.add('open');document.body.classList.add('tpOpen');}
@@ -482,7 +485,9 @@ function setMe(m){ME=m||'學長';document.body.classList.toggle('asMumu',!isBoss
 async function api(path,body){if(!API)throw new Error('沒有設定收件網址');const r=await fetch(API.replace(/\/$/,'')+'/island/api/'+path,{method:body?'POST':'GET',headers:Object.assign({'Content-Type':'application/json'},PASS?{'X-Island-Pass':PASS}:SESS?{'X-Island-Session':SESS}:{}),body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({ok:false,error:'回應格式錯誤'}));if(r.status===401){PASS='';setSess('');showLock();}return j;}
 function showLock(){const u=!!pass();document.getElementById('lk').hidden=u;document.getElementById('un').hidden=!u;}
-function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',交件:subText(x),wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:resText(x)};}
+function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',交件:subText(x),wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:resText(x),建立:+x.created||0,更新:+x.updated||0,完成於:doneTs(x)};}
+// 2026-11-01 sort：完成時間＝驗收通過時間 > 最後回報時間 > updated
+function doneTs(x){const r=x.review_res,m=x.mumu_res;return +((r&&r.action==='approve'&&r.ts)||(m&&m.ts)||(r&&r.ts)||x.updated||0)||0;}
 // 2026-11-01 處理結果只在跟目前狀態相符時顯示（退回→「已退回：原因」；解除卡住後不再殘留「標記卡住」）
 // 2026-11-01 fix2：交件內容（Worker 的 submission.text；舊資料沒有就空）
 function subText(x){const s=x&&x.submission;const v=typeof s==='string'?s:(s&&s.text)||'';return String(v).trim();}
