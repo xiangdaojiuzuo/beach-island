@@ -296,7 +296,7 @@ addEventListener('pointerup',e=>{cv.classList.remove('drag');if(drag&&!moved){co
  camT.x=best?P[best][0]:wx;camT.y=best?P[best][1]-25:wy;camT.z=Math.max(cam.z*1.0,fitZ()*3);}drag=null;});
 cv.addEventListener('wheel',e=>{e.preventDefault();const[wx,wy]=toWorld(e.clientX,e.clientY);const nz=camT.z*Math.exp(-e.deltaY*0.0015);
  camT.z=nz;clampCam(camT);camT.x=wx-(e.clientX-VW/2)/camT.z;camT.y=wy-(e.clientY-VH/2)/camT.z;clampCam(camT);Object.assign(cam,camT);},{passive:false});
-window.ISLAND={walkable,inObst,stopPos,clash,bodyW,sitAt:(id,sid)=>{const c=chars.find(x=>x.id===id),s=SEATS.find(x=>x.id===sid);if(!c||!s)return false;leaveSeat(c);if(s.by&&s.by!==id)return false;s.by=c.id;c.sitSeat=s;const p=shortest(c.path.length?c.path[0]:c.node,s.node,c);c.path=c.node===s.node?[]:p.slice(1);c.wandering=true;c.speedSave=c.speedSave||c.speed;return true;},get SEATS(){return SEATS},get adj(){return adj},cam,camT,chars,goTo,P,get tasks(){return TASKS},setTasks:(it)=>onTasks({ok:true,items:it}),visitBoard:id=>visitBoard(chars.find(c=>c.id===id)),openPanel,closePanel,get BOARD(){return BOARD},zoomTo:(k,z)=>{camT.x=P[k][0];camT.y=P[k][1]-25;camT.z=fitZ()*(z||3);}};
+window.ISLAND={get taskInfo(){return TASK_INFO},walkable,inObst,stopPos,clash,bodyW,sitAt:(id,sid)=>{const c=chars.find(x=>x.id===id),s=SEATS.find(x=>x.id===sid);if(!c||!s)return false;leaveSeat(c);if(s.by&&s.by!==id)return false;s.by=c.id;c.sitSeat=s;const p=shortest(c.path.length?c.path[0]:c.node,s.node,c);c.path=c.node===s.node?[]:p.slice(1);c.wandering=true;c.speedSave=c.speedSave||c.speed;return true;},get SEATS(){return SEATS},get adj(){return adj},cam,camT,chars,goTo,P,get tasks(){return TASKS},setTasks:(it)=>onTasks({ok:true,items:it}),visitBoard:id=>visitBoard(chars.find(c=>c.id===id)),openPanel,closePanel,get BOARD(){return BOARD},zoomTo:(k,z)=>{camT.x=P[k][0];camT.y=P[k][1]-25;camT.z=fitZ()*(z||3);}};
 // ---- UI ----
 function refreshUI(){const r=document.getElementById('rows');r.innerHTML='';for(const c of chars){const d=document.createElement('div');d.innerHTML='<b>'+c.label+'</b>';
  for(const s of['work','rest']){const b=document.createElement('button');b.textContent=LABEL[s];if(c.state===s)b.className='on';
@@ -460,10 +460,12 @@ async function taskAct(wid,a,btn){const ask={block:'卡住的原因？',submit:'
  btn.disabled=true;const j=await api('task_action',{wid,action:a,note}).catch(()=>({ok:false,error:'連不到收件服務'}));
  if(!j.ok){alert(j.error||'送出失敗');btn.disabled=false;return;}const t=TASKS.find(x=>x.wid===wid);if(t)t.待處理=a==='claim'?'進行中':a==='block'?'卡住':a==='submit'?'待驗收':a;renderPanel();lockedPoll();}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#tp .tb');if(!b||b.disabled)return;e.stopPropagation();taskAct(b.dataset.wid,b.dataset.act,b);});
+// 2026-11-03 todayisland：卡片唯一鍵（wid 優先，沒有才用任務編號）
+function tkKey(t){return t.wid?'w:'+t.wid:'i:'+t.id;}window.ISLAND_TKKEY=tkKey;
 function renderPanel(){const tp=document.getElementById('tp');if(!tp)return;
  tp.querySelector('.lg').innerHTML=ST_ORDER.map(s=>'<span><i style="background:'+ST_COLOR[s]+'"></i>'+s+'</span>').join('');
  const L=[...TASKS].sort(taskCmp);
- tp.querySelector('.ls').innerHTML=L.length?L.map(t=>'<div class="tk" style="border-left-color:'+(ST_COLOR[t.狀態]||'#ccc')+'"><div class="t">'+esc(t.標題)+'</div><div><span class="st" style="background:'+(ST_COLOR[t.狀態]||'#ccc')+'">'+esc(t.狀態)+'</span><span class="m">'+esc(t.id)+'</span></div><div class="m">'+(t.內容?'<div class="bd">'+esc(t.內容)+'</div>':'')+'指派給：'+esc(t.派給||'-')+'　接手：'+esc(t.接手||'（還沒人接）')+'　驗收：'+esc(t.驗收||'-')+(t.成品?'<br>成品：'+esc(t.成品):'')+'</div>'+subHtml(t)+tkBtns(t)+'</div>').join(''):'<p style="color:#777;text-align:center">'+(TASK_INFO.ok?'板子是空的':esc(TASK_INFO.err||'讀不到任務資料'))+'</p>';
+ tp.querySelector('.ls').innerHTML=L.length?L.map(t=>'<div class="tk" data-tk="'+esc(tkKey(t))+'" style="border-left-color:'+(ST_COLOR[t.狀態]||'#ccc')+'"><div class="t">'+esc(t.標題)+'</div><div><span class="st" style="background:'+(ST_COLOR[t.狀態]||'#ccc')+'">'+esc(t.狀態)+'</span><span class="m">'+esc(t.id)+'</span></div><div class="m">'+(t.內容?'<div class="bd">'+esc(t.內容)+'</div>':'')+'指派給：'+esc(t.派給||'-')+'　接手：'+esc(t.接手||'（還沒人接）')+'　驗收：'+esc(t.驗收||'-')+(t.成品?'<br>成品：'+esc(t.成品):'')+'</div>'+subHtml(t)+tkBtns(t)+'</div>').join(''):'<p style="color:#777;text-align:center">'+(TASK_INFO.ok?'板子是空的':esc(TASK_INFO.err||'讀不到任務資料'))+'</p>';
  tp.querySelector('.ft').textContent=(TASK_INFO.stale?'⚠ status.json 太久沒更新，這份清單可能是舊的。':'')+(ME==='學長'?'列出小島上全部的單':'全部的單都會列出；跟你有關的（你派的或派給你的）才看得到內容和按鈕')+'，每 10 秒更新。';}
 let OPENED_AT=0;function openPanel(){OPENED_AT=performance.now();showLock();renderPanel();document.getElementById('tp').classList.add('open');document.body.classList.add('tpOpen');}
 function closePanel(){try{document.getElementById('tfe').textContent='';}catch(e){}document.getElementById('tp').classList.remove('open');document.body.classList.remove('tpOpen');PENDING_CHAT=null;updBtnDot();}
@@ -487,10 +489,12 @@ function setMe(m){const _m=m||'學長';if(_m!==ME)clearDrafts();ME=_m;document.b
 async function api(path,body){if(!API)throw new Error('沒有設定收件網址');const r=await fetch(API.replace(/\/$/,'')+'/island/api/'+path,{method:body?'POST':'GET',headers:Object.assign({'Content-Type':'application/json'},PASS?{'X-Island-Pass':PASS}:SESS?{'X-Island-Session':SESS}:{}),body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({ok:false,error:'回應格式錯誤'}));if(r.status===401){PASS='';setSess('');showLock();}return j;}
 function showLock(){const u=!!pass();document.getElementById('lk').hidden=u;document.getElementById('un').hidden=!u;}
-function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',交件:subText(x),wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:resText(x),建立:+x.created||0,更新:+x.updated||0,完成於:doneTs(x),交件時間:subTs(x)};}
+function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',交件:subText(x),wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:resText(x),建立:+x.created||0,更新:+x.updated||0,完成於:doneTs(x),完成實時:realDoneTs(x),交件時間:subTs(x)};}
 // 2026-11-03 statuscard：交件時間（Worker submission.ts；舊資料沒有就 0）
 function subTs(x){const s=x&&x.submission;return +(s&&typeof s==='object'&&s.ts)||0;}
 // 2026-11-01 sort：完成時間＝驗收通過時間 > 最後回報時間 > updated
+// 2026-11-03 todayisland：只認真正的驗收通過時間（沒有就 0，不拿 updated 頂替）
+function realDoneTs(x){const r=x&&x.review_res;return +(x&&x.status==='完成'&&r&&r.action==='approve'&&r.ts)||0;}
 function doneTs(x){const r=x.review_res,m=x.mumu_res;return +((r&&r.action==='approve'&&r.ts)||(m&&m.ts)||(r&&r.ts)||x.updated||0)||0;}
 // 2026-11-01 處理結果只在跟目前狀態相符時顯示（退回→「已退回：原因」；解除卡住後不再殘留「標記卡住」）
 // 2026-11-01 fix2：交件內容（Worker 的 submission.text；舊資料沒有就空）
@@ -691,7 +695,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／daynight-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／daynight-v1-20261103／todayisland-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
@@ -770,4 +774,46 @@ const RC_CFG={
    const cs=(window.ISLAND&&window.ISLAND.chars)||[];for(const c of cs)if(c&&isFinite(c.x))glow(c.x,c.y-18,34,.20);}
   ctx.restore();};
  window.DAYNIGHT={ver:DN_VER,tod:()=>cur,forced:FORCE,hour:tpeHour};
+})();</script><style>
+#tiP{position:fixed;right:8px;top:52px;z-index:30;width:280px;max-width:calc(100vw - 16px);background:rgba(255,255,255,.95);color:#223;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.25);font:13px/1.4 "Noto Sans TC","PingFang TC",sans-serif}
+#tiP>button.h{all:unset;cursor:pointer;display:flex;justify-content:space-between;width:calc(100% - 16px);padding:7px 8px;font-weight:700;min-height:28px;align-items:center}
+#tiP .b{padding:0 8px 8px;max-height:45vh;overflow:auto}#tiP.col .b{display:none}
+#tiP h4{margin:6px 0 3px;font-size:12px;color:#556}#tiP .it{all:unset;display:block;cursor:pointer;padding:5px 6px;margin:2px 0;border-radius:6px;background:#f2f5fa;width:calc(100% - 12px);min-height:20px}#tiP .it:hover{background:#e2ebf8}#tiP .unk{color:#a33}
+.tk.tiFlash{outline:3px solid #ffb300;transition:outline .3s}
+@media (max-width:600px){#tiP{top:auto;bottom:62px;right:8px;width:220px}#tiP .b{max-height:40vh}body.tpOpen #tiP{display:none}}
+</style>
+<div id="tiP" class="col" aria-live="polite"><button class="h" type="button" id="tiH" aria-expanded="false"><span style="white-space:nowrap">📅 今日小島</span><span id="tiS" style="font-size:12px;font-weight:500;text-align:right;margin-left:6px">…</span></button><div class="b" id="tiB"></div></div>
+<script>/* 2026-11-03 今日小島 v1 (T016) todayisland-v1-20261103（規格 v2）
+   只用登入者原本就拿到的 TASKS（ISLAND.tasks），不讀私聊、不打外部服務、不做逾期。
+   今日完成＝狀態仍為「完成」且驗收通過時間（完成實時）落在台北今天 [00:00, 隔天00:00)；沒時間不算、不用 updated 代替。
+   目前待處理＝所有非完成（含舊單、被重開的單）。依唯一鍵去重；點項目用唯一鍵找卡，找不到就提示。 */
+(function(){
+ const VER='todayisland-v1-20261103',P=document.getElementById('tiP'),H=document.getElementById('tiH'),B=document.getElementById('tiB'),S=document.getElementById('tiS'),I=window.ISLAND,KEY=window.ISLAND_TKKEY;
+ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const TPE=8*3600000;const tpeDay=ms=>Math.floor((ms+TPE)/86400000);// 台北無夏令時間，固定 UTC+8，與瀏覽器時區無關
+ const ymd=d=>new Date(d*86400000).toISOString().slice(0,10);const hm=ms=>new Date(ms+TPE).toISOString().slice(11,16);
+ const ms=v=>{v=+v||0;return v>0&&v<1e12?v*1000:v;};
+ let last=null;// 上一次成功的快照 {L,at}
+ function snap(){const info=I.taskInfo||{},L=I.tasks;if(info.ok&&Array.isArray(L)){if(last&&last.src===L)return{state:'ok',d:last};const m=new Map();for(const t of L){if(!t)continue;const k=KEY(t);if(!m.has(k))m.set(k,t);}last={L:[...m.values()],at:Date.now(),src:L};return{state:'ok',d:last};}
+  if(info.err)return{state:'fail',err:info.err,d:last};return{state:'loading',d:last};}
+ function compute(L,now){const today=tpeDay(now);const done=[],pend=[];for(const t of L){if(t.狀態==='完成'){const d=ms(t.完成實時);if(d>0&&tpeDay(d)===today)done.push(t);}else if(t.狀態)pend.push(t);}return{today:ymd(today),done,pend};}
+ let sig='';function render(){const s=snap(),now=Date.now(),r=s.d?compute(s.d.L,now):null;
+  const k=JSON.stringify([s.state,s.err||'',r&&r.today,r&&r.done.map(KEY),r&&r.pend.map(t=>KEY(t)+t.狀態+t.標題),s.state!=='ok'&&s.d&&s.d.at]);if(k===sig)return;sig=k;
+  const row=t=>'<button type="button" class="it" data-k="'+esc(KEY(t))+'"><b>'+esc(t.id||'')+'</b> '+esc(t.標題||'（看不到標題）')+' <small>（'+esc(t.狀態)+'）</small></button>';
+  let head='',body='';
+  if(s.state==='loading'&&!r){S.textContent='載入中…';B.innerHTML='<div>載入中…（登入後才會有任務資料）</div>';return;}
+  if(s.state==='fail'){S.textContent='未知';head='<div class="unk">載入失敗：'+esc(s.err)+'。數量未知'+(r?'；下面是上次 '+hm(s.d.at)+' 的資料（未更新）':'')+'</div>';}
+  else if(s.state==='loading'){S.textContent='載入中…';head='<div class="unk">載入中；下面是上次 '+hm(s.d.at)+' 的資料（未更新）</div>';}
+  else S.textContent='目前可見：今日完成 '+r.done.length+'｜待處理 '+r.pend.length;
+  if(r){const ok=s.state==='ok',n=x=>ok?x.length+' 件（目前可見）':'未知';
+   body='<h4>今日完成（台北 '+r.today+'）'+n(r.done)+'</h4>'+(r.done.map(row).join('')||'<div>'+(ok?'今天目前可見的單裡還沒有驗收完成的':'（未更新）')+'</div>')+'<h4>目前待處理 '+n(r.pend)+'</h4>'+(r.pend.map(row).join('')||'<div>'+(ok?'目前可見的單裡沒有待處理':'（未更新）')+'</div>');
+   if(ok&&!s.d.L.length)body='<div>已載入：目前可見的任務清單是空的</div>'+body;}
+  B.innerHTML=head+body;}
+ function toast(m){let e=document.getElementById('tiToast');if(!e){e=document.createElement('div');e.id='tiToast';e.style.cssText='position:fixed;left:50%;top:60px;transform:translateX(-50%);z-index:60;background:#333;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px';document.body.appendChild(e);}e.textContent=m;e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,2500);}
+ function jump(k){const live=(I.tasks||[]).some(t=>t&&KEY(t)===k);if(!live){toast('這張任務卡已經不在，或你目前看不到');return false;}
+  try{I.openPanel();}catch(e){}const tb=document.getElementById('tabTask');if(tb)tb.click();if(matchMedia('(max-width:600px)').matches)P.classList.add('col');
+  setTimeout(()=>{const c=[...document.querySelectorAll('#tp .tk[data-tk]')].find(el=>el.dataset.tk===k);if(!c){toast('這張任務卡已經不在，或你目前看不到');return;}c.scrollIntoView({block:'center',behavior:'smooth'});c.classList.add('tiFlash');setTimeout(()=>c.classList.remove('tiFlash'),1800);},250);return true;}
+ B.addEventListener('click',e=>{const b=e.target.closest('.it');if(b)jump(b.dataset.k);});
+ H.onclick=()=>{const c=P.classList.toggle('col');H.setAttribute('aria-expanded',String(!c));};
+ render();setInterval(render,1000);window.TODAYISLAND={ver:VER,compute,jump,tpeDay};
 })();</script></body></html>
