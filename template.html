@@ -855,8 +855,8 @@ const RC_CFG={
  H.onclick=()=>{const c=P.classList.toggle('col');H.setAttribute('aria-expanded',String(!c));};
  render();setInterval(render,1000);window.TODAYISLAND={ver:VER,compute,jump,tpeDay};
 })();</script><style>/* 2026-11-03 clock-v1：小島時鐘（台北） */
-#isClock{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 6px);z-index:25;pointer-events:none;padding:3px 8px;border-radius:8px;background:rgba(10,20,40,.62);backdrop-filter:blur(2px);color:#fff;font:600 12px/1.3 ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:.2px;box-shadow:0 1px 4px rgba(0,0,0,.3);text-shadow:0 1px 1px rgba(0,0,0,.5);white-space:nowrap}
-#isClock small{font:inherit;font-size:10px;opacity:.75;margin-left:4px}
+#isClock{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 6px);z-index:25;pointer-events:none;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.84);border:1px solid rgba(255,255,255,.25);color:#fff;font:800 18px/1.25 ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:.2px;box-shadow:0 1px 4px rgba(0,0,0,.3);text-shadow:0 1px 1px rgba(0,0,0,.5);white-space:nowrap}
+#isClock small{font:inherit;font-size:12px;font-weight:700;opacity:.9;margin-left:6px}@media (min-width:700px){#isClock{font-size:20px}}
 body.tpOpen #isClock{display:none}
 </style><div id="isClock" role="timer" aria-label="台北時間"><span id="isClockT">----/--/-- --:--:--</span><small>台北</small></div>
 <script>/* 2026-11-03 小島時鐘 v1 (T018) clock-v1-20261103
@@ -865,10 +865,11 @@ body.tpOpen #isClock{display:none}
 (function(){
  const VER='clock-v1-20261103',E=document.getElementById('isClock'),T=document.getElementById('isClockT'),p2=n=>String(n).padStart(2,'0');
  function fmt(ms){const d=new Date(ms+8*3600000);return d.getUTCFullYear()+'/'+p2(d.getUTCMonth()+1)+'/'+p2(d.getUTCDate())+' '+p2(d.getUTCHours())+':'+p2(d.getUTCMinutes())+':'+p2(d.getUTCSeconds());}
- let tm=0;function tick(){clearTimeout(tm);const now=Date.now();T.textContent=fmt(now);tm=setTimeout(tick,1000-now%1000+5);}
+ let tm=0;function tick(){clearTimeout(tm);const now=Date.now();T.textContent=fmt(now);place();tm=setTimeout(tick,1000-now%1000+5);}
  function place(){E.style.top='';let top=E.getBoundingClientRect().top,c=E.getBoundingClientRect();const obs=['home','boardBtn','infoBtn','fsBtn','sndBtn','rcBtn','tiP'].map(id=>document.getElementById(id)).filter(el=>el&&!el.hidden&&getComputedStyle(el).display!=='none').map(el=>el.getBoundingClientRect()).filter(r=>r.height&&r.top<160);
-  for(let k=0;k<4;k++){const hit=obs.filter(r=>!(r.right<=c.left-4||r.left>=c.right+4||r.bottom<=top-2||r.top>=top+c.height+2));if(!hit.length)break;top=Math.max(...hit.map(r=>r.bottom))+6;}E.style.top=Math.round(top)+'px';}
+  for(let k=0;k<4;k++){const hit=obs.filter(r=>!(r.right<=c.left-4||r.left>=c.right+4||r.bottom<=top-2||r.top>=top+c.height+2));if(!hit.length)break;top=Math.max(...hit.map(r=>r.bottom))+6;}E.style.top=Math.round(top)+'px';
+  /* 休息角面板若被時鐘蓋到，就把面板往下挪到時鐘下方（只調位置，不改內容） */const P=document.getElementById('rcP');if(P){P.style.top='';if(!P.hidden){const pr=P.getBoundingClientRect(),cr=E.getBoundingClientRect();if(!(pr.right<=cr.left||pr.left>=cr.right||pr.bottom<=cr.top||pr.top>=cr.bottom))P.style.top=Math.round(cr.bottom+6)+'px';}}}
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});addEventListener('focus',tick);addEventListener('pageshow',tick);
- addEventListener('resize',place);tick();place();setTimeout(place,500);setTimeout(place,2000);
- window.ISLAND_CLOCK={ver:VER,fmt,place};
+ addEventListener('resize',place);setTimeout(place,500);setTimeout(place,2000);
+ tick();window.ISLAND_CLOCK={ver:VER,fmt,place};
 })();</script></body></html>
