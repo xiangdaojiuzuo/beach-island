@@ -477,7 +477,7 @@ document.getElementById('boardBtn').onclick=openPanel;
  if(!req){b.textContent='⛶ 全螢幕？';b.onclick=()=>alert('這支手機的瀏覽器不支援網頁全螢幕。\n請按「分享」→「加入主畫面」，之後從主畫面圖示打開就是全螢幕。');return;}
  b.onclick=async()=>{try{if(cur())await ext.call(document);else await req.call(de,{navigationUI:'hide'});}catch(e){alert('無法切換全螢幕：'+(e.message||e));}lab();};
  document.addEventListener('fullscreenchange',lab);document.addEventListener('webkitfullscreenchange',lab);lab();})();document.querySelector('#tp .x').onclick=closePanel;
-document.getElementById('tp').addEventListener('click',e=>{if(performance.now()-OPENED_AT<450){e.stopPropagation();e.preventDefault();}},true);// 手機點小人/告示板後的殘留 click 不要誤點面板
+/* restexit-fix2-20261103：只擋「開面板之前就按下去」的殘留 click；開面板之後才按下的（例如快速點聊天分頁）一律放行 */let TP_PD=-1;addEventListener('pointerdown',()=>{TP_PD=performance.now();},true);document.getElementById('tp').addEventListener('click',e=>{if(performance.now()-OPENED_AT<450&&TP_PD<=OPENED_AT){e.stopPropagation();e.preventDefault();}},true);// 手機點小人/告示板後的殘留 click 不要誤點面板
 document.getElementById('tp').addEventListener('click',e=>{if(e.target.id==='tp')closePanel();});addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
 // ---- 上鎖：通行碼只存在記憶體（關頁即清除），任務細節只從上鎖 API 拿 ----
 const LS='islandPass';let API=new URLSearchParams(location.search).get('api')||'';let PARTNERS=[];
@@ -695,7 +695,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button><button type="button" id="rcA" aria-pressed="false">🕰 自動</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
