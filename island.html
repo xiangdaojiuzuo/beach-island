@@ -363,7 +363,7 @@ let last=0;function frame(ts){const dt=Math.min(0.05,(ts-last)/1000||0);last=ts;
  const TAGS=[];// 名牌不互蓋：由前往後放，撞到已放的名牌就往上疊一格（最多 4 格）
  for(const c of [...chars].sort((a,b)=>b.y-a.y)){const fs=Math.max(7,11/Math.sqrt(cam.z/fitZ()));ctx.font='bold '+fs+'px sans-serif';ctx.textAlign='center';let ty=c.y-hs[c.id]-4;
   const w=ctx.measureText(c.label).width+6;for(let k=0;k<4&&TAGS.some(r=>Math.abs(r[0]-c.x)<(r[2]+w)/2+1&&Math.abs(r[1]-ty)<fs+4);k++)ty-=fs+4;TAGS.push([c.x,ty,w]);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(c.x-w/2,ty-fs,w,fs+3);ctx.fillStyle='#fff';ctx.fillText(c.label,c.x,ty);const bb=bubbleOf(c);if(bb){const bf=fs*1.15;ctx.font='bold '+bf+'px sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"';const bw=ctx.measureText(bb).width+8,by=ty-fs-6-bf*0.2+Math.sin(performance.now()/250)*1;ctx.fillStyle=bb==='📋'||bb==='✋接單'?'rgba(255,236,150,.97)':'rgba(255,255,255,.95)';ctx.beginPath();ctx.roundRect(c.x-bw/2,by-bf,bw,bf+5,4);ctx.fill();ctx.beginPath();ctx.moveTo(c.x-3,by+5);ctx.lineTo(c.x+3,by+5);ctx.lineTo(c.x,by+9);ctx.fill();ctx.fillStyle='#333';ctx.fillText(bb,c.x,by+1);}}
- drawNotice(ts);if(ts%500<20)refreshUI();requestAnimationFrame(frame);}
+ if(window.RC_DRAW)RC_DRAW(ctx,ts);drawNotice(ts);if(ts%500<20)refreshUI();requestAnimationFrame(frame);}
 // 2026-11-01 公告欄招牌（固定版）：世界座標、跟地圖縮放；兩根木杆釘在告示板頂端，永遠不動；畫在人物之前（人物可擋住）
 const SIGN={fs:17,h:25,post:7};const BLABEL_H=SIGN.h+SIGN.post;
 function drawBoardLabel(){const fs=SIGN.fs,cx=BOARD.x+BOARD.w/2;ctx.save();ctx.font='900 '+fs+'px "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -664,4 +664,85 @@ document.addEventListener('focusin',()=>{q();setTimeout(q,300);setTimeout(q,700)
 document.addEventListener('pointerdown',e=>{if(!B.classList.contains('kbd'))return;if(e.target.closest&&e.target.closest('#chF'))return;const a=document.activeElement;if(a&&a.blur&&/^(INPUT|TEXTAREA)$/.test(a.tagName))a.blur();off();},true);
 setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任何事件，也每秒檢查高度一次
 })();</script>
+<style>/* 2026-11-03 休息角 restcorner-v1 */
+#rcBtn{position:fixed;left:420px;top:10px;font-size:14px;padding:6px 12px;border-radius:8px;border:0;background:rgba(225,245,255,.95);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:6;min-height:32px}
+#rcBtn[aria-pressed="true"]{background:#ffe7b0}
+@media(max-width:700px){#rcBtn{left:60px;top:52px}}
+#rcP{position:fixed;left:10px;top:56px;z-index:7;width:240px;max-width:calc(100vw - 20px);background:rgba(255,255,255,.95);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.35);padding:8px 10px;font-size:13px;color:#4a3a20}
+@media(max-width:700px){#rcP{top:96px}}
+@media(orientation:landscape) and (max-height:520px){#rcP{top:52px;left:auto;right:10px;width:220px}}
+#rcP[hidden]{display:none}#rcP .hd{display:flex;justify-content:space-between;align-items:center;font-weight:bold;margin-bottom:6px}
+#rcP button{font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid #d8c8a8;background:#fff8ea;cursor:pointer;min-height:36px}
+#rcP button[aria-pressed="true"]{background:#ffcf8a;border-color:#c08a30}#rcP .x{border:0;background:none;font-size:16px;min-width:36px}
+#rcP .row{display:flex;gap:6px;margin:4px 0}#rcP .tip{font-size:11px;color:#8a7a60;margin-top:4px}
+#rcBtn:focus-visible,#rcP button:focus-visible,#rcMini:focus-visible{outline:3px solid #1e88e5;outline-offset:2px}
+#rcMini{position:fixed;left:10px;top:96px;z-index:7;font-size:13px;padding:6px 10px;border-radius:18px;border:0;background:rgba(255,231,176,.95);box-shadow:0 2px 6px rgba(0,0,0,.3);min-height:36px;cursor:pointer}
+@media(min-width:701px){#rcMini{top:56px}}#rcMini[hidden]{display:none}
+#c[data-rc-tone="morning"]{filter:saturate(1.12) brightness(1.06) sepia(.12)}
+#c[data-rc-tone="night"]{filter:brightness(.55) saturate(.75) hue-rotate(15deg)}
+#rcTint{position:fixed;inset:0;pointer-events:none;z-index:1;display:none}
+#rcTint[data-tone="morning"]{display:block;background:linear-gradient(180deg,rgba(255,200,140,.18),rgba(255,240,200,0) 60%)}
+#rcTint[data-tone="night"]{display:block;background:radial-gradient(ellipse at 50% 20%,rgba(120,150,255,.10),rgba(10,20,60,.35))}
+@media(prefers-reduced-motion:reduce){#rcP,#rcBtn,#rcMini{transition:none!important;animation:none!important}}
+</style>
+<div id="rcTint" aria-hidden="true"></div>
+<button id="rcBtn" type="button" aria-pressed="false" aria-controls="rcP">🌊 休息角</button>
+<div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
+<div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button></div>
+<div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
+<div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
+<script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
+   純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
+   版面設定（可調）：座標為底圖 1669×942 像素。 */
+const RC_VER='restcorner-v1-20261103';
+const RC_CFG={
+ bench:{x:470,y:779,face:'sea'},           // 長椅：沙灘碼頭西側，面向南方海面
+ entrance:{x:560,y:752},                   // 入口：步道上（走進/走出起點）
+ zoom:3.2,                                 // 進入時鏡頭倍率（× fitZ）
+ // 預留給未來 AI 的 3 個位子（沙灘碼頭東側，彼此約 100px，不壓步道/碼頭/攤位）
+ reserved:[{id:'chengcheng',name:'澄澄',x:1010,y:786},{id:'xinyu',name:'芯語',x:1110,y:787},{id:'metamuse',name:'Meta Muse',x:1210,y:786}],
+ // 固定工位（只標記保護，不搬動）
+ keep:{mina_work:[400,305],mumu_work:[1090,425]},
+ minGap:60                                  // 預留位與工位/長椅最小距離（檢查用）
+};
+(function(){
+ const I=window.ISLAND,cv=document.getElementById('c'),tint=document.getElementById('rcTint'),btn=document.getElementById('rcBtn'),P=document.getElementById('rcP'),mini=document.getElementById('rcMini');
+ tint.remove();cv.after(tint);const RM=matchMedia('(prefers-reduced-motion: reduce)');
+ const S={on:false,tone:null,saved:null,raf:0,v:null,phase:'out',loops:0};
+ function setTone(t){S.tone=t;if(t){cv.setAttribute('data-rc-tone',t);tint.setAttribute('data-tone',t);}else{cv.removeAttribute('data-rc-tone');tint.removeAttribute('data-tone');}
+  document.getElementById('rcM').setAttribute('aria-pressed',String(t==='morning'));document.getElementById('rcN').setAttribute('aria-pressed',String(t==='night'));}
+ function loop(ts){S.raf=0;if(!S.v)return;const v=S.v,dt=Math.min(.05,((ts||0)-(S.lt||ts||0))/1000);S.lt=ts;const tg=S.phase==='in'?RC_CFG.bench:RC_CFG.entrance,dx=tg.x-v.x,dy=tg.y-v.y,d=Math.hypot(dx,dy),sp=Math.max(.5,60*dt);
+  if(RM.matches||d<=sp){v.x=tg.x;v.y=tg.y;if(S.phase==='in'){S.phase='sit';}else if(S.phase==='leaving'){finishLeave();return;}}else{v.x+=dx/d*sp;v.y+=dy/d*sp;v.t++;}
+  if(S.phase==='sit'){S.loops=0;return;}// 坐下後停止動畫迴圈（省電；減少動態亦同）
+  S.raf=requestAnimationFrame(loop);S.loops=1;}
+ function kick(){if(!S.raf){S.lt=0;S.raf=requestAnimationFrame(loop);S.loops=1;}}
+ function stop(){if(S.raf)cancelAnimationFrame(S.raf);S.raf=0;S.loops=0;}
+ function enter(){if(S.on)return;S.on=true;S.saved={x:I.camT.x,y:I.camT.y,z:I.camT.z,cx:I.cam.x,cy:I.cam.y,cz:I.cam.z};
+  S.v={x:RC_CFG.entrance.x,y:RC_CFG.entrance.y,t:0};S.phase='in';setTone(S.tone||'morning');
+  I.camT.z=fitZ()*RC_CFG.zoom;I.camT.x=RC_CFG.bench.x;I.camT.y=RC_CFG.bench.y-20;clampCam(I.camT);if(RM.matches)Object.assign(I.cam,{x:I.camT.x,y:I.camT.y,z:I.camT.z});
+  btn.setAttribute('aria-pressed','true');btn.textContent='🌊 休息角中';P.hidden=false;mini.hidden=true;kick();document.getElementById(S.tone==='night'?'rcN':'rcM').focus();}
+ function leave(){if(!S.on)return;S.phase='leaving';if(RM.matches){finishLeave();return;}kick();}
+ function finishLeave(){stop();S.on=false;S.v=null;S.phase='out';setTone(null);const s=S.saved;if(s){Object.assign(I.camT,{x:s.x,y:s.y,z:s.z});Object.assign(I.cam,{x:s.cx,y:s.cy,z:s.cz});}S.saved=null;
+  P.hidden=true;mini.hidden=true;btn.setAttribute('aria-pressed','false');btn.textContent='🌊 休息角';btn.focus();}
+ btn.onclick=()=>S.on?leave():enter();
+ document.getElementById('rcM').onclick=()=>setTone('morning');document.getElementById('rcN').onclick=()=>setTone('night');
+ document.getElementById('rcL').onclick=leave;
+ document.getElementById('rcX').onclick=()=>{P.hidden=true;if(S.on){mini.hidden=false;mini.focus();}};
+ mini.onclick=()=>{mini.hidden=true;P.hidden=false;document.getElementById('rcX').focus();};
+ function drawV(ctx,v){const s=(typeof depthScale==='function'?depthScale(v.y):1);const sit=S.phase==='sit',bob=(!sit&&!RM.matches)?Math.abs(Math.sin(v.t/6))*1.5:0;
+  ctx.save();ctx.translate(v.x,v.y-bob);ctx.scale(s,s);ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(0,bob,8,2.6,0,0,7);ctx.fill();
+  const h=sit?22:30;ctx.fillStyle='#4f7bd9';ctx.fillRect(-5,-h,10,h-(sit?4:8));ctx.fillStyle='#2e3b55';if(sit){ctx.fillRect(-5,-6,10,4);}else{ctx.fillRect(-5,-8,4,8);ctx.fillRect(1,-8,4,8);}
+  ctx.fillStyle='#f3cfa8';ctx.beginPath();ctx.arc(0,-h-5,6,0,7);ctx.fill();ctx.fillStyle='#5a3a22';ctx.beginPath();ctx.arc(0,-h-6,6,Math.PI,0);ctx.fill();if(sit){ctx.fillStyle='#2a1a10';ctx.fillRect(-3,-h-5,1.6,1.6);ctx.fillRect(1.4,-h-5,1.6,1.6);}// 坐下時臉朝海（畫面下方＝海）
+  ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(-12,-h-22,24,10);ctx.fillStyle='#fff';ctx.fillText('你',0,-h-14);ctx.restore();}
+ window.RC_DRAW=function(ctx,ts){// 由主畫面每格呼叫（世界座標）；不在休息角也畫：長椅＋預留位（靜態）
+  const b=RC_CFG.bench;ctx.save();ctx.fillStyle='#8a5a32';ctx.fillRect(b.x-22,b.y-6,44,5);ctx.fillStyle='#6b4224';ctx.fillRect(b.x-20,b.y-1,3,6);ctx.fillRect(b.x+17,b.y-1,3,6);
+  ctx.font='bold 7px sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText('🌊 休息角',b.x,b.y+14);
+  for(const r of RC_CFG.reserved){ctx.setLineDash([3,2]);ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(r.x,r.y,12,4.5,0,0,7);ctx.stroke();ctx.setLineDash([]);
+   const t='預留：'+r.name,w=ctx.measureText(t).width+6;ctx.fillStyle='rgba(40,60,90,.6)';ctx.fillRect(r.x-w/2,r.y-17,w,10);ctx.fillStyle='#fff';ctx.fillText(t,r.x,r.y-9.5);}
+  ctx.restore();if(S.v)drawV(ctx,S.v);};
+ addEventListener('keydown',e=>{if(e.key==='Escape'&&S.on&&!P.hidden&&document.activeElement&&P.contains(document.activeElement)){P.hidden=true;mini.hidden=false;mini.focus();}});
+ window.RESTCORNER={ver:RC_VER,cfg:RC_CFG,enter,leave,setTone,state:()=>({on:S.on,tone:S.tone,phase:S.phase,loops:S.loops,raf:S.raf,saved:S.saved,filter:getComputedStyle(cv).filter,tintTone:tint.getAttribute('data-tone')})};
+})();
+</script>
 </body></html>
