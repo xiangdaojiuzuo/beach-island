@@ -98,7 +98,7 @@ body.kbd #chF{padding:4px 8px 6px}body.kbd #chF input{padding:6px 12px;font-size
 <div id="chatV" hidden><div id="chTo" class="picks"></div><div id="chHdW"><div id="chHd"></div><span id="chSt" hidden role="button" tabindex="0" aria-expanded="false"></span><button type="button" id="gMg" hidden>⚙️ 成員／設定</button><div id="chCard" hidden></div></div><div id="chL"></div><div class="err" id="chE" style="padding:0 14px"></div><form id="chF"><input id="chT" maxlength="1000" placeholder="輸入訊息…" autocomplete="off"><button type="submit" id="chSend">送出</button></form></div><div id="gS" hidden><div class="sh"><h3 id="gSt">建立群組</h3><label class="f">群組名稱<input type="text" id="gN" maxlength="20" placeholder="例如：第二集分鏡小組"></label><div style="font-size:14px;color:#7a6a50">成員（學長固定在群組裡）</div><div class="mem" id="gM"></div><div class="err" id="gE"></div><div class="acts"><button type="button" id="gCc">取消</button><button type="button" class="pri" id="gOk">建立</button><button type="button" class="del" id="gDl" hidden>🗑 刪除群組</button></div><div id="gCf" hidden><b>確定要刪除群組「<span id="gCfN"></span>」？</b><br>群組裡的對話也會一起刪掉，無法復原。<div class="acts"><button type="button" id="gCfNo">先不要</button><button type="button" class="del" id="gCfYes">確定刪除</button></div></div></div></div></div></div></div>
 <div id="real"></div><button id="uiBtn" type="button" aria-controls="ui"></button><div id="ui"><div id="rows"></div><div id="src"></div><div class="note">※ 沐沐的狀態只代表她在 Slack 串發言，不代表真實忙閒。<br>手動切換後 60 秒內不被示範模式覆蓋。</div></div>
 <script>
-const DATA=/*DATA*/;const ME_LS='islandMe';try{localStorage.removeItem('islandPass');localStorage.removeItem(ME_LS);}catch(e){}let ME='學長';const isBoss=()=>ME==='學長';const SRC=/*SRC*/;
+const DATA=/*DATA*/;const ME_LS='islandMe';try{localStorage.removeItem('islandPass');localStorage.removeItem(ME_LS);}catch(e){}let ME='學長';/* 2026-11-03 chatdraft-v1：每個對話各自的草稿，只存在記憶體（不寫 localStorage、不送伺服器） */const CD_VER='chatdraft-v1-20261103',DRAFTS=new Map();let DRAFT_FOR=null;function clearDrafts(){DRAFTS.clear();DRAFT_FOR=null;const i=document.getElementById('chT');if(i)i.value='';}const isBoss=()=>ME==='學長';const SRC=/*SRC*/;
 const W=DATA.size[0],H=DATA.size[1],P=DATA.points;
 // 補充節點：書屋木平台階梯（原 deck_west 連線會穿過花圃）
 Object.assign(P,{ring_ne:[905,497],deck_stair_b:[1008,503],deck_stair_t:[1012,458]});
@@ -480,9 +480,9 @@ document.getElementById('tp').addEventListener('click',e=>{if(e.target.id==='tp'
 const LS='islandPass';let API=new URLSearchParams(location.search).get('api')||'';let PARTNERS=[];
 document.body.classList.toggle('asMumu',ME!=='學長');fetch('island_api.json',{cache:'no-store'}).then(r=>r.json()).then(c=>{if(!API)API=c.base;if(SESS)api('check').then(j=>{if(j.ok){PARTNERS=j.partners||PARTNERS;setMe(j.me||'學長');showLock();chatPoll();}}).catch(()=>{});lockedPoll();poll();}).catch(()=>{});
 let PASS='';const SESS_LS='islandSess';let SESS='';try{SESS=localStorage.getItem(SESS_LS)||'';}catch(e){}
-const pass=()=>PASS||SESS;const setSess=t=>{SESS=t||'';try{t?localStorage.setItem(SESS_LS,t):localStorage.removeItem(SESS_LS);}catch(e){}};
+const pass=()=>PASS||SESS;const setSess=t=>{SESS=t||'';if(!SESS)clearDrafts();try{t?localStorage.setItem(SESS_LS,t):localStorage.removeItem(SESS_LS);}catch(e){}};
 // 2026-10-31 解鎖身分：學長或沐沐（沐沐用自己的通行碼，Worker 回 me:'沐沐'）；聊天「我」的泡泡、可傳對象、學長專用按鈕都看這個
-function setMe(m){ME=m||'學長';document.body.classList.toggle('asMumu',!isBoss());if(!isBoss()&&!['學長','全體'].includes(CHAT_TO)&&!grp(CHAT_TO))CHAT_TO='學長';}
+function setMe(m){const _m=m||'學長';if(_m!==ME)clearDrafts();ME=_m;document.body.classList.toggle('asMumu',!isBoss());if(!isBoss()&&!['學長','全體'].includes(CHAT_TO)&&!grp(CHAT_TO))CHAT_TO='學長';}
 async function api(path,body){if(!API)throw new Error('沒有設定收件網址');const r=await fetch(API.replace(/\/$/,'')+'/island/api/'+path,{method:body?'POST':'GET',headers:Object.assign({'Content-Type':'application/json'},PASS?{'X-Island-Pass':PASS}:SESS?{'X-Island-Session':SESS}:{}),body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({ok:false,error:'回應格式錯誤'}));if(r.status===401){PASS='';setSess('');showLock();}return j;}
 function showLock(){const u=!!pass();document.getElementById('lk').hidden=u;document.getElementById('un').hidden=!u;}
@@ -509,7 +509,7 @@ document.getElementById('tf').onsubmit=async e=>{e.preventDefault();const er=doc
  const j=await api('tasks',{title:document.getElementById('tfT').value,body:document.getElementById('tfB').value,assignee:document.getElementById('tfA').value}).catch(()=>({ok:false,error:'連不到收件服務'}));
  if(seq!==TF_SEQ||document.getElementById('tf').hidden)return;if(j.ok){er.textContent='';document.getElementById('tf').reset();document.getElementById('tf').hidden=true;lockedPoll();}else er.textContent=j.error||'送出失敗';};
 document.getElementById('chgBtn').onclick=async()=>{const n=prompt('新通行碼（至少 8 字）。換了之後，其他裝置要重新輸入。');if(!n)return;const j=await api('passcode',{new:n});if(j.ok){PASS=n;api('login',{}).then(x=>{if(x.ok&&x.session){setSess(x.session);PASS='';}}).catch(()=>{});const l=await fetch('/local/passcode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({new:n})}).then(r=>r.ok).catch(()=>false);alert(l?'已換通行碼，本機更新器也已改用新碼':'已換通行碼；但本機 passcode.txt 沒同步到（不是從本機網頁開的），請手動更新');}else alert(j.error||'更換失敗');};
-document.getElementById('outBtn').onclick=()=>{if(SESS){const t=SESS;fetch(API.replace(/\/$/,'')+'/island/api/logout',{method:'POST',headers:{'X-Island-Session':t}}).catch(()=>{});}setSess('');PASS='';ME='學長';document.body.classList.remove('asMumu');TASKS=[];CHAT=[];GROUPS=[];document.getElementById('boardBtn').classList.remove('new');showLock();renderPanel();};
+document.getElementById('outBtn').onclick=()=>{if(SESS){const t=SESS;fetch(API.replace(/\/$/,'')+'/island/api/logout',{method:'POST',headers:{'X-Island-Session':t}}).catch(()=>{});}setSess('');clearDrafts();PASS='';ME='學長';document.body.classList.remove('asMumu');TASKS=[];CHAT=[];GROUPS=[];document.getElementById('boardBtn').classList.remove('new');showLock();renderPanel();};
 document.getElementById('infoBtn').onclick=()=>document.body.classList.toggle('info');
 // 公開走位：status.json 的 walk token 變了 → 那位小人走到告示板看一下
 let prevWalk=null;function onWalk(w){w=w||{};if(prevWalk)for(const c of chars){const v=w[c.id]||w[c.name],pv=prevWalk[c.id]||prevWalk[c.name];if(v&&v!==pv)visitBoard(c);}prevWalk=w;}
@@ -528,7 +528,7 @@ function inConv(m,to){if(grp(to))return m.group===to;if(m.group)return false;ret
 function setTab(t){TAB=t;document.getElementById('tabTask').classList.toggle('on',t==='task');document.getElementById('tabChat').classList.toggle('on',t==='chat');
  document.querySelector('#tp .hd h2').textContent=t==='chat'?'💬 小島聊天':'📋 任務告示板';document.getElementById('taskV').hidden=t!=='task';document.getElementById('chatV').hidden=t!=='chat';if(t==='chat'){renderChat();chatPoll();}}
 const hm=ts=>new Date(ts).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
-function renderChat(){const bar=document.getElementById('chTo');if(!targets().includes(CHAT_TO))CHAT_TO='全體';const G=grp(CHAT_TO);
+function renderChat(){const bar=document.getElementById('chTo');if(!targets().includes(CHAT_TO))CHAT_TO='全體';{const di=document.getElementById('chT');if(DRAFT_FOR!==CHAT_TO){if(DRAFT_FOR!==null){if(di.value)DRAFTS.set(DRAFT_FOR,di.value);else DRAFTS.delete(DRAFT_FOR);}di.value=DRAFTS.get(CHAT_TO)||'';DRAFT_FOR=CHAT_TO;}}const G=grp(CHAT_TO);
  bar.innerHTML=targets().map(n=>'<button type="button" class="pick'+(n===CHAT_TO?' on':'')+'" data-n="'+esc(n)+'"><i class="avw">'+avatar(n,'av')+(n!==CHAT_TO&&unread(n)?'<b class="dot"></b>':'')+'<b class="sd" hidden></b></i><span>'+esc(tName(n))+'</span><em class="sl" hidden></em></button>').join('')
   +'<button type="button" class="pick newg" id="gNew"><i class="avw"><span class="av tx">＋</span></i><span>建立群組</span></button>';
  bar.querySelectorAll('.pick[data-n]').forEach(b=>b.onclick=()=>{CHAT_TO=b.dataset.n;focusChar(CHAT_TO);renderChat();});document.getElementById('gNew').onclick=()=>openGroup(null);const on=bar.querySelector('.pick.on');if(on)on.scrollIntoView({block:'nearest',inline:'center'});
@@ -546,8 +546,8 @@ function chatKick(){if(document.hidden)return;clearTimeout(CHAT_KICK);CHAT_KICK=
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)chatKick();});addEventListener('focus',chatKick);
 async function chatPoll(){if(!pass()||CHAT_BUSY)return;CHAT_BUSY=true;CHAT_LAST=Date.now();try{const j=await api('chat');if(j.ok){const ng=j.groups||[];const ch=JSON.stringify(j.items)!==JSON.stringify(CHAT)||JSON.stringify(ng)!==JSON.stringify(GROUPS);CHAT=j.items;GROUPS=ng;if(TAB==='chat'&&ch)renderChat();updBtnDot();}}catch(e){}finally{CHAT_BUSY=false;}}
 document.getElementById('tabTask').onclick=()=>setTab('task');document.getElementById('tabChat').onclick=()=>setTab('chat');
-document.getElementById('chF').onsubmit=async e=>{e.preventDefault();const i=document.getElementById('chT'),er=document.getElementById('chE');if(!i.value.trim())return;er.textContent='送出中…';
- const j=await api('chat',{to:CHAT_TO,text:i.value}).catch(()=>({ok:false,error:'連不到收件服務'}));if(j.ok){i.value='';er.textContent='';CHAT.push(j.item);renderChat();CHAT_FAST=Date.now()+120000;updTyping();}else er.textContent=j.error||'送出失敗';};
+document.getElementById('chT').addEventListener('input',e=>{if(DRAFT_FOR!==null){if(e.target.value)DRAFTS.set(DRAFT_FOR,e.target.value);else DRAFTS.delete(DRAFT_FOR);}});window.ISLAND_DRAFTS={ver:CD_VER,keys:()=>[...DRAFTS.keys()]};document.getElementById('chF').onsubmit=async e=>{e.preventDefault();const i=document.getElementById('chT'),er=document.getElementById('chE');if(!i.value.trim())return;er.textContent='送出中…';const _to=CHAT_TO,_tx=i.value;
+ const j=await api('chat',{to:_to,text:_tx}).catch(()=>({ok:false,error:'連不到收件服務'}));if(j.ok){DRAFTS.delete(_to);if(DRAFT_FOR===_to){if(i.value===_tx)i.value='';else if(i.value)DRAFTS.set(_to,i.value);}er.textContent='';CHAT.push(j.item);renderChat();CHAT_FAST=Date.now()+120000;updTyping();}else er.textContent=j.error||'送出失敗';};
 // ---- 自訂群組：建立／改名／加減成員／刪除（刪除要在頁面上再確認一次）----
 let G_EDIT=null;const $=id=>document.getElementById(id);
 function openGroup(id){G_EDIT=id?grp(id):null;const g=G_EDIT;$('gSt').textContent=g?'群組設定':'建立群組';$('gOk').textContent=g?'儲存':'建立';$('gDl').hidden=!g;$('gCf').hidden=true;$('gE').textContent='';
@@ -690,7 +690,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
