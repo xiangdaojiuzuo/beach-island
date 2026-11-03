@@ -750,30 +750,40 @@ const RC_CFG={
  window.RESTCORNER={ver:RC_VER,cfg:RC_CFG,enter,leave,setTone,state:()=>({on:S.on,tone:S.tone,phase:S.phase,loops:S.loops,raf:S.raf,saved:S.saved,filter:getComputedStyle(cv).filter,tintTone:tint.getAttribute('data-tone')})};
 })();
 </script>
-<script>/* 2026-11-03 日夜變化 v1 (T015) daynight-v1-20261103
-   純前端視覺：依台北時間（Asia/Taipei）分 dawn 05-08 / day 08-17 / dusk 17-19 / night 19-05。
-   測試：網址加 ?tod=dawn|day|dusk|night 可強制時段。不呼叫 API、不改人物/任務/工位/預留位。 */
+<script>/* 2026-11-03 日夜變化 v1 (T015) daynight-v1-20261103（含平滑過渡）
+   純前端視覺：時間固定以 Asia/Taipei（UTC+8，無夏令時間）計算，與瀏覽器時區無關。
+   四段：dawn 05-08 / day 08-17 / dusk 17-19 / night 19-05；關鍵影格之間線性內插，天空漸層＋海面＋整體光線一起變，約每分鐘更新。
+   測試：網址加 ?tod=dawn|day|dusk|night 強制時段（或 ?tod=14.5 指定台北小時）。不呼叫 API、不改人物/任務/工位/預留位。 */
 (function(){
  const DN_VER='daynight-v1-20261103',W=1669,H=942;
  const Q=(new URLSearchParams(location.search).get('tod')||'').toLowerCase();
- const FORCE=['dawn','day','dusk','night'].includes(Q)?Q:null;
- function tpeHour(){try{const f=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',hour:'numeric',minute:'numeric',hour12:false}).formatToParts(new Date());const h=+f.find(x=>x.type==='hour').value%24,m=+f.find(x=>x.type==='minute').value;return h+m/60;}catch(e){const d=new Date();return ((d.getUTCHours()+8)%24)+d.getUTCMinutes()/60;}}
- function tod(){if(FORCE)return FORCE;const h=tpeHour();return h>=5&&h<8?'dawn':h<17&&h>=8?'day':h>=17&&h<19?'dusk':'night';}
+ const FIX={dawn:6.5,day:12,dusk:18,night:22};const FORCE=FIX[Q]!=null?FIX[Q]:(Q!==''&&isFinite(+Q)&&+Q>=0&&+Q<24?+Q:null);
+ function tpeHour(){const ms=(Date.now()+8*3600000)%86400000;return ms/3600000;}// UTC+8 固定，不看瀏覽器時區
+ const hourNow=()=>FORCE!=null?FORCE:tpeHour();
+ const seg=h=>h>=5&&h<8?'dawn':h>=8&&h<17?'day':h>=17&&h<19?'dusk':'night';
+ // 關鍵影格：[小時, 天空頂色rgba, 中段rgba, 海面(底)rgba, 星星, 燈光]
+ const N=[[8,14,48,.62],[14,24,70,.46],[18,28,72,.40]],Z=c=>[c[0],c[1],c[2],0];
+ const DW=[[255,170,190,.30],[255,205,150,.12],[255,230,200,.06]],DK=[[255,110,60,.34],[230,120,90,.18],[90,40,90,.16]];
+ const K=[[0,...N,1,1],[4.8,...N,1,1],[6.3,...DW,0,.25],[7.6,...DW,0,0],[8.6,...DW.map(Z),0,0],[16.4,...DK.map(Z),0,0],[17.6,...DK,0,.3],[18.4,...DK,.15,.5],[19.4,...N,1,1],[24,...N,1,1]];
+ const lerp=(a,b,f)=>a+(b-a)*f,lc=(a,b,f)=>a.map((v,i)=>lerp(v,b[i],f));
+ function look(h){let i=0;while(i<K.length-2&&h>=K[i+1][0])i++;const A=K[i],B=K[i+1],f=Math.max(0,Math.min(1,(h-A[0])/(B[0]-A[0])));
+  return{top:lc(A[1],B[1],f),mid:lc(A[2],B[2],f),bot:lc(A[3],B[3],f),star:lerp(A[4],B[4],f),glow:lerp(A[5],B[5],f)};}
+ const rgba=c=>'rgba('+c[0].toFixed(0)+','+c[1].toFixed(0)+','+c[2].toFixed(0)+','+c[3].toFixed(3)+')';
  const STARS=[];let sd=7;const rnd=()=>((sd=(sd*16807)%2147483647)/2147483647);for(let i=0;i<70;i++)STARS.push([rnd()*W,rnd()*H*.22,.5+rnd()*1.1,rnd()*6.28]);
  const LAMPS=[[400,305],[1090,425],[470,779],[560,752],[1010,786],[1110,787],[1210,786]];
- let cur=tod();setInterval(()=>{cur=tod();document.documentElement.setAttribute('data-tod',cur);},30000);document.documentElement.setAttribute('data-tod',cur);
+ let hr=hourNow(),L=look(hr),cur=seg(hr);
+ function tick(){hr=hourNow();L=look(hr);cur=seg(hr);document.documentElement.setAttribute('data-tod',cur);}
+ tick();setInterval(tick,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
  const RM=matchMedia('(prefers-reduced-motion: reduce)');
- window.DN_DRAW=function(ctx,ts){const t=cur;if(t==='day')return;ctx.save();
-  if(t==='dawn'){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(255,170,190,.30)');g.addColorStop(.35,'rgba(255,205,150,.12)');g.addColorStop(1,'rgba(255,230,200,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
-  else if(t==='dusk'){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(255,110,60,.34)');g.addColorStop(.5,'rgba(230,120,90,.18)');g.addColorStop(1,'rgba(90,40,90,.16)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
-  else{let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(8,14,48,.62)');g.addColorStop(.3,'rgba(14,24,70,.46)');g.addColorStop(1,'rgba(18,28,72,.40)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-   for(const s of STARS){const a=RM.matches?.8:.55+.45*Math.sin(ts/700+s[3]);ctx.fillStyle='rgba(255,255,235,'+a.toFixed(2)+')';ctx.beginPath();ctx.arc(s[0],s[1],s[2],0,7);ctx.fill();}
-   ctx.globalCompositeOperation='lighter';
-   const glow=(x,y,r,a)=>{const rg=ctx.createRadialGradient(x,y,0,x,y,r);rg.addColorStop(0,'rgba(255,200,120,'+a+')');rg.addColorStop(1,'rgba(255,200,120,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();};
-   for(const l of LAMPS)glow(l[0],l[1]-12,55,.22);
-   const cs=(window.ISLAND&&window.ISLAND.chars)||[];for(const c of cs)if(c&&isFinite(c.x))glow(c.x,c.y-18,34,.20);}
+ window.DN_DRAW=function(ctx,ts){const l=L;if(l.top[3]<.005&&l.mid[3]<.005&&l.bot[3]<.005&&l.star<.01&&l.glow<.01)return;ctx.save();
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,rgba(l.top));g.addColorStop(.35,rgba(l.mid));g.addColorStop(1,rgba(l.bot));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(l.star>.01)for(const s of STARS){const a=l.star*(RM.matches?.8:.55+.45*Math.sin(ts/700+s[3]));ctx.fillStyle='rgba(255,255,235,'+a.toFixed(2)+')';ctx.beginPath();ctx.arc(s[0],s[1],s[2],0,7);ctx.fill();}
+  if(l.glow>.01){ctx.globalCompositeOperation='lighter';
+   const glow=(x,y,r,a)=>{const rg=ctx.createRadialGradient(x,y,0,x,y,r);rg.addColorStop(0,'rgba(255,200,120,'+a.toFixed(3)+')');rg.addColorStop(1,'rgba(255,200,120,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();};
+   for(const p of LAMPS)glow(p[0],p[1]-12,55,.22*l.glow);
+   const cs=(window.ISLAND&&window.ISLAND.chars)||[];for(const c of cs)if(c&&isFinite(c.x))glow(c.x,c.y-18,34,.20*l.glow);}
   ctx.restore();};
- window.DAYNIGHT={ver:DN_VER,tod:()=>cur,forced:FORCE,hour:tpeHour};
+ window.DAYNIGHT={ver:DN_VER,tod:()=>cur,forced:FORCE,hour:()=>hr,look:h=>look(h),tick};
 })();</script><style>
 #tiP{position:fixed;right:8px;top:52px;z-index:30;width:280px;max-width:calc(100vw - 16px);background:rgba(255,255,255,.95);color:#223;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.25);font:13px/1.4 "Noto Sans TC","PingFang TC",sans-serif}
 #tiP>button.h{all:unset;cursor:pointer;display:flex;justify-content:space-between;width:calc(100% - 16px);padding:7px 8px;font-weight:700;min-height:28px;align-items:center}
