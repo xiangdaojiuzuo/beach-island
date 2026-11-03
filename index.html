@@ -695,7 +695,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button><button type="button" id="rcA" aria-pressed="false">🕰 自動</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103／clock-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
@@ -854,4 +854,21 @@ const RC_CFG={
  B.addEventListener('click',e=>{const b=e.target.closest('.it');if(b)jump(b.dataset.k);});
  H.onclick=()=>{const c=P.classList.toggle('col');H.setAttribute('aria-expanded',String(!c));};
  render();setInterval(render,1000);window.TODAYISLAND={ver:VER,compute,jump,tpeDay};
+})();</script><style>/* 2026-11-03 clock-v1：小島時鐘（台北） */
+#isClock{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 6px);z-index:25;pointer-events:none;padding:3px 8px;border-radius:8px;background:rgba(10,20,40,.62);backdrop-filter:blur(2px);color:#fff;font:600 12px/1.3 ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:.2px;box-shadow:0 1px 4px rgba(0,0,0,.3);text-shadow:0 1px 1px rgba(0,0,0,.5);white-space:nowrap}
+#isClock small{font:inherit;font-size:10px;opacity:.75;margin-left:4px}
+body.tpOpen #isClock{display:none}
+</style><div id="isClock" role="timer" aria-label="台北時間"><span id="isClockT">----/--/-- --:--:--</span><small>台北</small></div>
+<script>/* 2026-11-03 小島時鐘 v1 (T018) clock-v1-20261103
+   固定 Asia/Taipei（UTC+8、無夏令時間，直接由 UTC 換算，與裝置時區無關）；每秒對齊整秒更新；切回前景立即校正。
+   位置：畫面最上方正中間（含 env(safe-area-inset-top) 避開瀏海/狀態列）；若跟上方按鈕或今日小島重疊，就自動往下移到它們下方；打開任務板/聊天時隱藏。 */
+(function(){
+ const VER='clock-v1-20261103',E=document.getElementById('isClock'),T=document.getElementById('isClockT'),p2=n=>String(n).padStart(2,'0');
+ function fmt(ms){const d=new Date(ms+8*3600000);return d.getUTCFullYear()+'/'+p2(d.getUTCMonth()+1)+'/'+p2(d.getUTCDate())+' '+p2(d.getUTCHours())+':'+p2(d.getUTCMinutes())+':'+p2(d.getUTCSeconds());}
+ let tm=0;function tick(){clearTimeout(tm);const now=Date.now();T.textContent=fmt(now);tm=setTimeout(tick,1000-now%1000+5);}
+ function place(){E.style.top='';let top=E.getBoundingClientRect().top,c=E.getBoundingClientRect();const obs=['home','boardBtn','infoBtn','fsBtn','sndBtn','rcBtn','tiP'].map(id=>document.getElementById(id)).filter(el=>el&&!el.hidden&&getComputedStyle(el).display!=='none').map(el=>el.getBoundingClientRect()).filter(r=>r.height&&r.top<160);
+  for(let k=0;k<4;k++){const hit=obs.filter(r=>!(r.right<=c.left-4||r.left>=c.right+4||r.bottom<=top-2||r.top>=top+c.height+2));if(!hit.length)break;top=Math.max(...hit.map(r=>r.bottom))+6;}E.style.top=Math.round(top)+'px';}
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});addEventListener('focus',tick);addEventListener('pageshow',tick);
+ addEventListener('resize',place);tick();place();setTimeout(place,500);setTimeout(place,2000);
+ window.ISLAND_CLOCK={ver:VER,fmt,place};
 })();</script></body></html>
