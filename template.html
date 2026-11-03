@@ -695,7 +695,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button><button type="button" id="rcA" aria-pressed="false">🕰 自動</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
@@ -727,9 +727,9 @@ const RC_CFG={
   S.v={x:RC_CFG.entrance.x,y:RC_CFG.entrance.y,t:0};S.phase='in';setTone(S.tone||'morning');
   I.camT.z=fitZ()*RC_CFG.zoom;I.camT.x=RC_CFG.bench.x;I.camT.y=RC_CFG.bench.y-20;clampCam(I.camT);if(RM.matches)Object.assign(I.cam,{x:I.camT.x,y:I.camT.y,z:I.camT.z});
   btn.setAttribute('aria-pressed','true');btn.textContent='🌊 休息角中';P.hidden=false;mini.hidden=true;kick();document.getElementById(S.tone==='night'?'rcN':'rcM').focus();}
- function leave(){if(!S.on)return;S.phase='leaving';if(RM.matches){finishLeave();return;}kick();}
+ function leave(){if(!S.on)return;S.phase='leaving';/* restexit-fix-20261103：一開始離開就收起休息角面板，避免過場中蓋住任務板/聊天 */S.fx=P.contains(document.activeElement)||mini.contains(document.activeElement);P.hidden=true;mini.hidden=true;if(RM.matches){finishLeave();return;}kick();}
  function finishLeave(){stop();S.on=false;S.v=null;S.phase='out';setTone(null);const s=S.saved;if(s){Object.assign(I.camT,{x:s.x,y:s.y,z:s.z});Object.assign(I.cam,{x:s.cx,y:s.cy,z:s.cz});}S.saved=null;
-  P.hidden=true;mini.hidden=true;btn.setAttribute('aria-pressed','false');btn.textContent='🌊 休息角';btn.focus();}
+  P.hidden=true;mini.hidden=true;btn.setAttribute('aria-pressed','false');btn.textContent='🌊 休息角';/* restexit-fix：只有焦點原本在休息角面板或沒落在別處時才回到休息角按鈕，不搶走任務板/聊天輸入框的焦點 */const a=document.activeElement;if(!a||a===document.body||P.contains(a)||mini.contains(a))btn.focus();S.fx=false;}
  btn.onclick=()=>S.on?leave():enter();
  document.getElementById('rcM').onclick=()=>setTone('morning');document.getElementById('rcN').onclick=()=>setTone('night');document.getElementById('rcA').onclick=()=>setTone('auto');
  document.getElementById('rcL').onclick=leave;
