@@ -45,7 +45,7 @@ canvas{display:block;width:100vw;height:100vh;cursor:grab}canvas.drag{cursor:gra
 #tp #chF #chSend{font-size:15px;padding:8px 16px;border-radius:20px;border:0;background:#e8730c;color:#fff;font-weight:bold;min-width:64px}
 .avw{position:relative;display:block;font-style:normal}.dot{position:absolute;top:1px;right:1px;width:12px;height:12px;border-radius:50%;background:#e53935;border:2px solid #fffaf0}
 .dsep{text-align:center;margin:12px 0 6px}.dsep span{background:rgba(91,74,46,.18);color:#5b4a2e;font-size:12px;padding:2px 10px;border-radius:10px}
-#chHdW{display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0}#chHdW #chHd{flex:0 1 auto}
+#chHdW{display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;flex-wrap:wrap}#chHdW #chHd{flex:0 1 auto}
 #tp #gMg{font-size:13px;padding:3px 10px;border-radius:12px;border:1px solid #c9b894;background:#fff;color:#5b4a2e}#gMg[hidden]{display:none}
 .pick.newg .av{background:#fff!important;color:#e8730c;border:2px dashed #e8730c}.av.grp{background:#3f8f7a}.av.all{background:#5b4a2e}
 #gS{position:absolute;inset:0;background:rgba(40,30,15,.45);display:flex;align-items:flex-end;justify-content:center;z-index:5}#gS[hidden]{display:none}
@@ -79,7 +79,8 @@ body.tpOpen #uiBtn,body.tpOpen #ui{display:none!important}
  #tp .ls{grid-row:4;min-height:0;padding:2px 10px 8px}#tp .ft{grid-row:5;padding:0 12px 4px;font-size:10px}.tk{margin:5px 0;padding:6px 10px}
  #chatV{grid-template-rows:38px auto auto minmax(0,1fr) auto auto}#chTo{grid-row:2;padding:3px 8px;border-top:1px solid #eadfc8}#chTo .av{width:30px;height:30px;font-size:13px}#chHdW{grid-row:3}#chHd{padding:2px}#chL{grid-row:4;min-height:0}#chE{grid-row:5}#chF{grid-row:6;padding:4px 10px 6px}#chF input{padding:6px 12px}
  #lk{padding:6px 14px;overflow:auto}}
-.sd{position:absolute;right:0;bottom:0;width:12px;height:12px;border-radius:50%;border:2px solid #fffaf0;box-sizing:border-box;background:#9e9e9e}.sd.w{background:#ff8a00}.sd.r{background:#8bc34a}#chSt{font-size:12px;padding:1px 8px;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55vw}#chSt.w{background:#ffe3c2;color:#b85a00}#chSt.r{background:#e6f2dc;color:#4b7a2a}
+.sd{position:absolute;right:0;bottom:0;width:12px;height:12px;border-radius:50%;border:2px solid #fffaf0;box-sizing:border-box;background:#9e9e9e}.sd.w{background:#ff8a00}.sd.r{background:#8bc34a}#chSt{font-size:12px;padding:1px 8px;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55vw}#chSt.w{background:#ffe3c2;color:#b85a00}#chSt.r{background:#e6f2dc;color:#4b7a2a}#chSt{cursor:pointer}#chSt:not([hidden]){display:inline-flex;align-items:center;min-width:0}#chSt .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#chSt .a{flex-shrink:0;margin-left:4px}#chSt.q{background:#fff3c4;color:#8a6d00}#chSt.u{background:#eee;color:#666}#chSt.f{background:#fde2e0;color:#b03a2e}.sd.q{background:#f2c200}.sd.u{background:#9e9e9e}.sd.f{background:#e74c3c}#chTo .pick .sl{font-style:normal;font-size:9px;line-height:1.1;color:#8a7a60;white-space:nowrap}#chTo .pick .sl.w{color:#b85a00}#chTo .pick .sl.f{color:#b03a2e}#chCard .vr{margin-top:6px;padding-top:4px;border-top:1px solid #eadcc4;font-size:10px;color:#a8946f;text-align:right}#chCard .hd{font-size:11px;color:#8a7a60;margin-bottom:4px}
+#chCard{flex:0 0 calc(100% - 28px);box-sizing:border-box;margin:2px 0 4px;overscroll-behavior:contain;padding:8px 10px;border:1px solid #e8c9a0;border-radius:10px;background:#fff8ee;font-size:13px;color:#5a4a30;max-height:min(24vh,220px);overflow:auto}#chCard .sbt{white-space:pre-wrap;word-break:break-word;background:#fff;border-radius:6px;padding:3px 6px;margin-top:2px}#chCard .an{font-size:10px;color:#a8946f;margin-top:4px}#chCard .ci{padding:6px 0;border-top:1px dashed #e8d4b4}#chCard .ci:first-child{border-top:0;padding-top:0}#chCard .ct{font-weight:bold;color:#3d2f1a}#chCard .ct small{font-weight:normal;color:#9a7a50;margin-left:4px}#chCard .cl{margin-top:2px;line-height:1.45}#chCard .cl b{color:#8a5a20;font-weight:normal}#chCard .stk{color:#c0392b}
 @media(orientation:landscape) and (max-height:520px){.sd{width:10px;height:10px}#chTo .pick{gap:0}#chTo .pick span{font-size:10px;line-height:1.1}#chSt{font-size:11px}}
 #sndBtn{position:fixed;left:372px;top:10px;font-size:14px;padding:6px 10px;border-radius:8px;border:0;background:rgba(255,255,255,.9);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:5}
 @media(max-width:700px){#sndBtn{left:10px;top:52px}}
@@ -94,7 +95,7 @@ body.kbd #chF{padding:4px 8px 6px}body.kbd #chF input{padding:6px 12px;font-size
 <div id="un" hidden><div class="tabs"><button id="tabTask" class="on">📋 任務</button><button id="tabChat">💬 聊天</button></div><div id="taskV"><div class="bar"><button class="pri" id="newBtn">＋ 派任務</button><button id="chgBtn">換通行碼</button><button id="outBtn">這台裝置上鎖</button></div>
 <form id="tf" hidden><label>標題（可不填，會自動取內容前 15 字）<input id="tfT" maxlength="80"></label><label>內容<textarea id="tfB" maxlength="1000"></textarea></label><label>指派給<select id="tfA"></select></label><div class="err" id="tfe"></div><button class="pri" type="submit">送出</button> <button type="button" id="tfC">取消</button></form>
 <div class="lg"></div><div class="ls"></div><div class="ft"></div></div>
-<div id="chatV" hidden><div id="chTo" class="picks"></div><div id="chHdW"><div id="chHd"></div><span id="chSt" hidden></span><button type="button" id="gMg" hidden>⚙️ 成員／設定</button></div><div id="chL"></div><div class="err" id="chE" style="padding:0 14px"></div><form id="chF"><input id="chT" maxlength="1000" placeholder="輸入訊息…" autocomplete="off"><button type="submit" id="chSend">送出</button></form></div><div id="gS" hidden><div class="sh"><h3 id="gSt">建立群組</h3><label class="f">群組名稱<input type="text" id="gN" maxlength="20" placeholder="例如：第二集分鏡小組"></label><div style="font-size:14px;color:#7a6a50">成員（學長固定在群組裡）</div><div class="mem" id="gM"></div><div class="err" id="gE"></div><div class="acts"><button type="button" id="gCc">取消</button><button type="button" class="pri" id="gOk">建立</button><button type="button" class="del" id="gDl" hidden>🗑 刪除群組</button></div><div id="gCf" hidden><b>確定要刪除群組「<span id="gCfN"></span>」？</b><br>群組裡的對話也會一起刪掉，無法復原。<div class="acts"><button type="button" id="gCfNo">先不要</button><button type="button" class="del" id="gCfYes">確定刪除</button></div></div></div></div></div></div></div>
+<div id="chatV" hidden><div id="chTo" class="picks"></div><div id="chHdW"><div id="chHd"></div><span id="chSt" hidden role="button" tabindex="0" aria-expanded="false"></span><button type="button" id="gMg" hidden>⚙️ 成員／設定</button><div id="chCard" hidden></div></div><div id="chL"></div><div class="err" id="chE" style="padding:0 14px"></div><form id="chF"><input id="chT" maxlength="1000" placeholder="輸入訊息…" autocomplete="off"><button type="submit" id="chSend">送出</button></form></div><div id="gS" hidden><div class="sh"><h3 id="gSt">建立群組</h3><label class="f">群組名稱<input type="text" id="gN" maxlength="20" placeholder="例如：第二集分鏡小組"></label><div style="font-size:14px;color:#7a6a50">成員（學長固定在群組裡）</div><div class="mem" id="gM"></div><div class="err" id="gE"></div><div class="acts"><button type="button" id="gCc">取消</button><button type="button" class="pri" id="gOk">建立</button><button type="button" class="del" id="gDl" hidden>🗑 刪除群組</button></div><div id="gCf" hidden><b>確定要刪除群組「<span id="gCfN"></span>」？</b><br>群組裡的對話也會一起刪掉，無法復原。<div class="acts"><button type="button" id="gCfNo">先不要</button><button type="button" class="del" id="gCfYes">確定刪除</button></div></div></div></div></div></div></div>
 <div id="real"></div><button id="uiBtn" type="button" aria-controls="ui"></button><div id="ui"><div id="rows"></div><div id="src"></div><div class="note">※ 沐沐的狀態只代表她在 Slack 串發言，不代表真實忙閒。<br>手動切換後 60 秒內不被示範模式覆蓋。</div></div>
 <script>
 const DATA=/*DATA*/;const ME_LS='islandMe';try{localStorage.removeItem('islandPass');localStorage.removeItem(ME_LS);}catch(e){}let ME='學長';const isBoss=()=>ME==='學長';const SRC=/*SRC*/;
@@ -485,7 +486,9 @@ function setMe(m){ME=m||'學長';document.body.classList.toggle('asMumu',!isBoss
 async function api(path,body){if(!API)throw new Error('沒有設定收件網址');const r=await fetch(API.replace(/\/$/,'')+'/island/api/'+path,{method:body?'POST':'GET',headers:Object.assign({'Content-Type':'application/json'},PASS?{'X-Island-Pass':PASS}:SESS?{'X-Island-Session':SESS}:{}),body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({ok:false,error:'回應格式錯誤'}));if(r.status===401){PASS='';setSess('');showLock();}return j;}
 function showLock(){const u=!!pass();document.getElementById('lk').hidden=u;document.getElementById('un').hidden=!u;}
-function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',交件:subText(x),wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:resText(x),建立:+x.created||0,更新:+x.updated||0,完成於:doneTs(x)};}
+function mapT(x){return{id:x.board_id||'（等本機接收）',標題:x.title||'（標題自動產生中）',內容:x.body,狀態:x.status,派給:x.assignee,接手:x.claimer,驗收:x.reviewer||'米娜',派單:x.by||'學長',成品:'',交件:subText(x),wid:x.wid,待處理:x.pending||(x.mumu_req?x.mumu_req.status:(x.review_req?x.review_req.action:'')),結果:resText(x),建立:+x.created||0,更新:+x.updated||0,完成於:doneTs(x),交件時間:subTs(x)};}
+// 2026-11-03 statuscard：交件時間（Worker submission.ts；舊資料沒有就 0）
+function subTs(x){const s=x&&x.submission;return +(s&&typeof s==='object'&&s.ts)||0;}
 // 2026-11-01 sort：完成時間＝驗收通過時間 > 最後回報時間 > updated
 function doneTs(x){const r=x.review_res,m=x.mumu_res;return +((r&&r.action==='approve'&&r.ts)||(m&&m.ts)||(r&&r.ts)||x.updated||0)||0;}
 // 2026-11-01 處理結果只在跟目前狀態相符時顯示（退回→「已退回：原因」；解除卡住後不再殘留「標記卡住」）
@@ -526,7 +529,7 @@ function setTab(t){TAB=t;document.getElementById('tabTask').classList.toggle('on
  document.querySelector('#tp .hd h2').textContent=t==='chat'?'💬 小島聊天':'📋 任務告示板';document.getElementById('taskV').hidden=t!=='task';document.getElementById('chatV').hidden=t!=='chat';if(t==='chat'){renderChat();chatPoll();}}
 const hm=ts=>new Date(ts).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
 function renderChat(){const bar=document.getElementById('chTo');if(!targets().includes(CHAT_TO))CHAT_TO='全體';const G=grp(CHAT_TO);
- bar.innerHTML=targets().map(n=>'<button type="button" class="pick'+(n===CHAT_TO?' on':'')+'" data-n="'+esc(n)+'"><i class="avw">'+avatar(n,'av')+(n!==CHAT_TO&&unread(n)?'<b class="dot"></b>':'')+'<b class="sd" hidden></b></i><span>'+esc(tName(n))+'</span></button>').join('')
+ bar.innerHTML=targets().map(n=>'<button type="button" class="pick'+(n===CHAT_TO?' on':'')+'" data-n="'+esc(n)+'"><i class="avw">'+avatar(n,'av')+(n!==CHAT_TO&&unread(n)?'<b class="dot"></b>':'')+'<b class="sd" hidden></b></i><span>'+esc(tName(n))+'</span><em class="sl" hidden></em></button>').join('')
   +'<button type="button" class="pick newg" id="gNew"><i class="avw"><span class="av tx">＋</span></i><span>建立群組</span></button>';
  bar.querySelectorAll('.pick[data-n]').forEach(b=>b.onclick=()=>{CHAT_TO=b.dataset.n;focusChar(CHAT_TO);renderChat();});document.getElementById('gNew').onclick=()=>openGroup(null);const on=bar.querySelector('.pick.on');if(on)on.scrollIntoView({block:'nearest',inline:'center'});
  document.getElementById('chHd').textContent=G?G.name+'（學長、'+G.members.join('、')+'）':CHAT_TO==='全體'?'全體群聊（所有夥伴都看得到）':'和 '+CHAT_TO+' 的對話';document.getElementById('gMg').hidden=!G;updChatSt();
@@ -579,9 +582,42 @@ let m=localStorage.getItem(K);ap(m===null?true:m==='1');
 b.addEventListener('click',e=>{e.stopPropagation();const n=!document.body.classList.contains('uiMin');ap(n);localStorage.setItem(K,n?'1':'0');});})();
 // 2026-11-01 小島聊天顯示夥伴即時狀態（與地圖/真實紀錄同源：c.state 工位＝工作中，其餘＝休息）
 function chChar(n){return chars.find(c=>c.name===n||(c.name||'').replace(/\s/g,'')===n||c.id===n);}
-function chTask(n){const L=(typeof TASKS!=='undefined'&&TASKS)||[];const g=(x,a,b)=>x[a]!==undefined?x[a]:x[b];const x=L.find(x=>g(x,'狀態','status')==='進行中'&&(g(x,'接手','claimer')===n||(!g(x,'接手','claimer')&&g(x,'派給','assignee')===n)));return x?(g(x,'標題','title')||''):'';}
-function updChatSt(){try{const bar=document.getElementById('chTo');if(!bar)return;bar.querySelectorAll('.pick[data-n]').forEach(b=>{const d=b.querySelector('.sd');if(!d)return;const c=chChar(b.dataset.n);if(!c){d.hidden=true;return;}const w=c.state==='work';d.hidden=false;d.className='sd '+(w?'w':'r');d.title=w?'工作中':'休息';});
- const e=document.getElementById('chSt'),c=chChar(CHAT_TO);if(!c||grp(CHAT_TO)||CHAT_TO==='全體'){e.hidden=true;return;}const w=c.state==='work',tk=w?chTask(CHAT_TO):'';e.hidden=false;e.className=w?'w':'r';e.textContent=w?'🟠 工作中'+(tk?'：'+tk:''):'🟢 休息中';e.title=e.textContent;}catch(err){}}
+// 2026-11-03 statuscard v2：近況只看登入者本來就拿得到的 TASKS（不讀聊天、不看地圖動畫 c.state）
+// 可見範圍：Worker island_core.mjs 第 143 行學長拿全部單；第 217–218 行沐沐拿全部單的標題／狀態，細節（交件、待處理、結果）只給她派的或派給她的。前端只沿用這份資料，不另外推斷。
+const SC_VER='statuscard-v3-20261103',ACTIVE_ST=['進行中','卡住','待驗收'];
+function chTasks(n){const L=(typeof TASKS!=='undefined'&&TASKS)||[];return L.filter(x=>ACTIVE_ST.includes(x.狀態)&&((x.接手||x.派給)===n));}
+function chTask(n){const x=chTasks(n)[0];return x?(x.標題||''):'';}
+const partial=()=>ME!=='學長';const ownT=t=>t.派給===ME||t.派單===ME;
+// 狀態：u 未知（沒登入／找不到角色）、q 載入中、f 載入失敗、w 工作中、v 待驗收、n 沒有未完成任務
+function chStatus(n){if(!pass()||!chChar(n))return {k:'u',dot:'u',short:'未知',txt:'⚪ 狀態未知'+(pass()?'':'（未登入）')};
+ if(TASK_INFO.err||TASK_INFO.stale)return {k:'f',dot:'f',short:'載入失敗',txt:'⚠ 任務資料沒更新（'+(TASK_INFO.err||'讀取失敗')+'），狀態未知'};
+ if(!TASK_INFO.ok)return {k:'q',dot:'q',short:'載入中',txt:'⏳ 任務載入中…'};
+ const L=chTasks(n),pre=partial()?'可見任務：':'';if(!L.length)return {k:'n',dot:'r',short:'無單',txt:'🟢 '+(partial()?'可見任務中':'')+'目前沒有未完成任務',L};
+ if(L.every(t=>t.狀態==='待驗收'))return {k:'v',dot:'q',short:'待驗收',txt:'🟡 '+pre+'待驗收：'+(L[0].標題||'')+(L.length>1?'（共 '+L.length+' 張）':''),L};
+ const f=L.find(t=>t.狀態!=='待驗收');return {k:'w',dot:'w',short:'工作中',txt:'🟠 '+pre+'工作中：'+(f.標題||'')+(L.length>1?'（共 '+L.length+' 張）':''),L};}
+const fmtT=ts=>{if(!ts)return '';const d=new Date(ts);const p=v=>String(v).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());};
+const NOVIS='（不是你派的或派給你的單，看不到細節）';
+function whereStuck(t){if(partial()&&!ownT(t))return NOVIS;const st=t.狀態,res=t.結果||'',pd=t.待處理||'';
+ if(st==='卡住')return '<span class="stk">卡住</span>：'+esc(res&&!/^卡住$/.test(res)?res:(pd&&pd!=='卡住'?pd:'（沒寫原因）'));
+ if(/^已退回/.test(res))return '<span class="stk">'+esc(res)+'</span>';
+ if(st==='待驗收')return '等 '+esc(t.驗收||'米娜')+' 驗收';
+ if(pd&&pd!==st)return '已送出「'+esc(pd)+'」，等本機同步';
+ return '沒有卡關，進行中';}
+function whereDone(t){if(partial()&&!ownT(t))return NOVIS;const s=t.交件||'';if(!s)return '還沒交件';const tm=fmtT(t.交件時間),cut=s.length>SUB_MAX?s.slice(0,SUB_MAX)+'…':s;
+ return (tm?tm+' 交件':'已交件（沒有記錄交件時間）')+'<div class="sbt">'+esc(cut)+'</div>';}
+function cardHtml(S){const L=S.L||[];const hd=partial()?'<div class="hd">📋 可見任務（依你登入的權限，只列你看得到的；不代表 '+esc(CHAT_TO)+' 的全部狀況）</div>':'';
+ const body=L.length?L.map(t=>'<div class="ci"><div class="ct">'+esc(t.id)+'｜'+esc(t.標題)+'<small>'+esc(t.狀態)+'</small></div><div class="cl"><b>卡在哪：</b>'+whereStuck(t)+'</div><div class="cl"><b>成果在哪：</b>'+whereDone(t)+'</div></div>').join(''):'<div class="ci">'+esc(S.txt.replace(/^\S+\s/,''))+'</div>';
+ const c=chChar(CHAT_TO),an=c?'<div class="an">🗺 地圖動畫：'+(c.state==='work'?'坐在工位':'休息／走動')+'（只是動畫，不代表任務狀態）</div>':'';
+ return hd+body+an+'<div class="vr">'+SC_VER+'</div>';}
+let CARD_OPEN=false,CARD_FOR='',CARD_ME='';
+function updChatSt(){try{const bar=document.getElementById('chTo');if(!bar)return;bar.querySelectorAll('.pick[data-n]').forEach(b=>{const d=b.querySelector('.sd'),l=b.querySelector('.sl');if(!d)return;if(!chChar(b.dataset.n)){d.hidden=true;if(l)l.hidden=true;return;}const S=chStatus(b.dataset.n);d.hidden=false;d.className='sd '+S.dot;d.title=S.txt;if(l){l.hidden=false;l.className='sl '+S.k;if(l.textContent!==S.short)l.textContent=S.short;}});
+ const e=document.getElementById('chSt'),cd=document.getElementById('chCard'),c=chChar(CHAT_TO);const mk=(pass()?'1':'0')+ME;if(CARD_FOR!==CHAT_TO||CARD_ME!==mk){CARD_FOR=CHAT_TO;CARD_ME=mk;CARD_OPEN=false;cd.innerHTML='';}
+ if(!c||grp(CHAT_TO)||CHAT_TO==='全體'){e.hidden=true;cd.hidden=true;return;}const S=chStatus(CHAT_TO),can=['w','v','n'].includes(S.k);e.hidden=false;e.className={w:'w',v:'q',n:'r',q:'u',u:'u',f:'f'}[S.k];
+ const txt=S.txt+(can?(CARD_OPEN?' ▴':' ▾'):''),hx='<span class="t">'+esc(S.txt)+'</span>'+(can?'<span class="a">'+(CARD_OPEN?'▴':'▾')+'</span>':'');if(e.innerHTML!==hx)e.innerHTML=hx;e.title=can?(CARD_OPEN?'點一下收合近況':'點一下看近況'):S.txt;e.setAttribute('aria-expanded',can&&CARD_OPEN?'true':'false');
+ const show=can&&CARD_OPEN;cd.hidden=!show;if(show){const h=cardHtml(S);if(cd.innerHTML!==h)cd.innerHTML=h;}}catch(err){}}
+(()=>{const e=document.getElementById('chSt');const tg=ev=>{if(ev.type==='keydown'&&!['Enter',' '].includes(ev.key))return;ev.preventDefault();ev.stopPropagation();if(!['w','v','n'].includes(chStatus(CHAT_TO).k))return;CARD_OPEN=!CARD_OPEN;updChatSt();};e.addEventListener('click',tg);e.addEventListener('keydown',tg);})();
+// 切換對象／任務更新／上鎖時立刻重畫，不等 2 秒輪詢（避免短暫顯示前一位的內容）
+(()=>{const W=f=>function(){const r=f.apply(this,arguments);try{updChatSt();}catch(e){}return r;};if(typeof renderChat==='function')renderChat=W(renderChat);if(typeof onTasks==='function')onTasks=W(onTasks);if(typeof showLock==='function')showLock=W(showLock);if(typeof setMe==='function')setMe=W(setMe);})();
 setInterval(updChatSt,2000);
 // 2026-11-01 正在想提示：學長在某對話的最後一則還沒人回、3 分鐘內、且 Worker 已記夥伴讀到（seen_by 含 @read） → 顯示「X 看到了，正在想…」，對方人物頭上冒「…」
 const TYPING_MS=180000;
