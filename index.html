@@ -695,7 +695,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button><button type="button" id="rcA" aria-pressed="false">🕰 自動</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103／clock-v1-20261103／island-reshape-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103／clock-v1-20261103／island-reshape-v2-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
@@ -706,8 +706,8 @@ const RC_CFG={
  entrance:{x:560,y:752},                   // 入口：步道上（走進/走出起點）
  zoom:3.2,                                 // 進入時鏡頭倍率（× fitZ）
  // 預留給未來 AI 的 3 個位子（沙灘碼頭東側，彼此約 100px，不壓步道/碼頭/攤位）
- // 2026-11-03 island-reshape-v1：預留位改成海上木棧平台上的 3 間空小屋（底圖已畫入）；x,y＝小屋門口
- reserved:[{id:'chengcheng',name:'澄澄',x:1008,y:880,hut:true},{id:'xinyu',name:'芯語',x:1130,y:880,hut:true},{id:'metamuse',name:'Meta Muse',x:1252,y:880,hut:true}],
+ // 2026-11-03 island-reshape-v2：預留位＝海上木棧平台上的 3 塊空地（虛線框＋預留牌），不蓋屋子；等本人入住再決定（學長 12:14/12:15）
+ reserved:[{id:'chengcheng',name:'澄澄',x:1008,y:872,plot:true},{id:'xinyu',name:'芯語',x:1130,y:872,plot:true},{id:'metamuse',name:'Meta Muse',x:1252,y:872,plot:true}],
  // 固定工位（只標記保護，不搬動）
  keep:{mina_work:[400,305],mumu_work:[1090,425]},
  minGap:60                                  // 預留位與工位/長椅最小距離（檢查用）
@@ -744,9 +744,8 @@ const RC_CFG={
  window.RC_DRAW=function(ctx,ts){// 由主畫面每格呼叫（世界座標）；不在休息角也畫：長椅＋預留位（靜態）
   const b=RC_CFG.bench;ctx.save();ctx.fillStyle='#8a5a32';ctx.fillRect(b.x-22,b.y-6,44,5);ctx.fillStyle='#6b4224';ctx.fillRect(b.x-20,b.y-1,3,6);ctx.fillRect(b.x+17,b.y-1,3,6);
   ctx.font='bold 7px sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText('🌊 休息角',b.x,b.y+14);
-  for(const r of RC_CFG.reserved){if(r.hut){/* island-reshape-v1：小屋門口右側掛「預留」木牌＋入住者名字 */const sx=r.x+20,sy=r.y-34;ctx.strokeStyle='#5a3a20';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(sx-6,sy-4);ctx.lineTo(sx-4,sy);ctx.moveTo(sx+6,sy-4);ctx.lineTo(sx+4,sy);ctx.stroke();
-    ctx.fillStyle='#c98b4f';ctx.fillRect(sx-11,sy,22,10);ctx.strokeStyle='#6b4224';ctx.strokeRect(sx-11,sy,22,10);ctx.font='bold 7px sans-serif';ctx.fillStyle='#3a2210';ctx.fillText('預留',sx,sy+7.6);
-    ctx.font='bold 6.5px sans-serif';const t=r.name,w=ctx.measureText(t).width+6;ctx.fillStyle='rgba(40,60,90,.72)';ctx.fillRect(r.x-w/2,r.y+3,w,9);ctx.fillStyle='#fff';ctx.fillText(t,r.x,r.y+10);ctx.font='bold 7px sans-serif';continue;}
+  for(const r of RC_CFG.reserved){if(r.plot){/* island-reshape-v2：空地＝虛線框＋小「預留」牌（含名字），框內不放任何建築 */const pw=78,ph=30,px=r.x-pw/2,py=r.y-ph;ctx.fillStyle='rgba(255,255,255,.10)';ctx.fillRect(px,py,pw,ph);ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=1.3;ctx.strokeRect(px,py,pw,ph);ctx.setLineDash([]);
+    const sx=px+pw-6,sy=py-2;ctx.fillStyle='#6b4224';ctx.fillRect(sx-1,sy-14,2,16);ctx.font='bold 6.5px sans-serif';const t2='預留・'+r.name,w=ctx.measureText(t2).width+8;ctx.fillStyle='#c98b4f';ctx.fillRect(sx-w/2,sy-24,w,11);ctx.strokeStyle='#6b4224';ctx.lineWidth=.8;ctx.strokeRect(sx-w/2,sy-24,w,11);ctx.fillStyle='#3a2210';ctx.fillText(t2,sx,sy-16);ctx.font='bold 7px sans-serif';continue;}
    ctx.setLineDash([3,2]);ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(r.x,r.y,12,4.5,0,0,7);ctx.stroke();ctx.setLineDash([]);
    const t='預留：'+r.name,w=ctx.measureText(t).width+6;ctx.fillStyle='rgba(40,60,90,.6)';ctx.fillRect(r.x-w/2,r.y-17,w,10);ctx.fillStyle='#fff';ctx.fillText(t,r.x,r.y-9.5);}
   ctx.restore();if(S.v)drawV(ctx,S.v);};
@@ -796,7 +795,7 @@ const RC_CFG={
  const phase=el=>el<-18?'深夜':el<-12?'天文曙暮光':el<-6?'航海曙暮光':el<-.833?'民用曙暮光':el<6?'日出/日落':'白天';
  const rgba=c=>'rgba('+c[0].toFixed(0)+','+c[1].toFixed(0)+','+c[2].toFixed(0)+','+c[3].toFixed(3)+')';
  const STARS=[];let sd=7;const rnd=()=>((sd=(sd*16807)%2147483647)/2147483647);for(let i=0;i<70;i++)STARS.push([rnd()*W,rnd()*H*.22,.5+rnd()*1.1,rnd()*6.28]);
- const LAMPS=[[400,305],[1090,425],[470,779],[560,752]].concat([[1050, 770], [1090, 770], [960, 816], [1298, 816], [876, 826], [615, 505], [785, 505], [905, 522], [1145, 522], [560, 715], [470, 530], [1000, 440], [983, 837], [1105, 837], [1227, 837]]);// island-reshape-v1：新燈柱＋小屋門燈
+ const LAMPS=[[400,305],[1090,425],[470,779],[560,752]].concat([[1050, 770], [1090, 770], [960, 816], [1298, 816], [876, 826], [615, 505], [785, 505], [905, 522], [1145, 522], [560, 715], [470, 530], [1000, 440]]);// island-reshape-v2：新燈柱（v1 小屋門燈已移除）
  const cv=document.getElementById('c'),MAN={morning:4,night:-22};
  let target=solar(nowMs()).el,shown=target,lastT=0,info={};
  function tick(){const ms=nowMs(),sun=solar(ms).el,tone=cv.getAttribute('data-rc-tone'),mode=MAN[tone]!=null?tone:'auto';target=mode==='auto'?sun:MAN[tone];
