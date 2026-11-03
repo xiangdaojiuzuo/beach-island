@@ -360,6 +360,7 @@ let last=0;function frame(ts){const dt=Math.min(0.05,(ts-last)/1000||0);last=ts;
  items.forEach(it=>{if(it.bd){drawBoard(ts);return;}if(it.o){ctx.drawImage(IMG['occ_'+it.o.name],it.o.x,it.o.y);return;}const c=it.c;if(c.sitting){hs[c.id]=drawSit(c);return;}ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(c.x,c.y,9*depthScale(c.y),3*depthScale(c.y),0,0,7);ctx.fill();
   const L=looking(c);if(L){ctx.save();const ds=depthScale(c.y);ctx.translate(c.x,c.y);ctx.rotate(c.face*(0.10+0.03*Math.sin(c.t*3)));ctx.translate(-c.x,-c.y-1.5*ds*Math.abs(Math.sin(c.t*1.6)));}
   hs[c.id]=c.id==='mina'?drawMina(c):c.id==='mumu'?drawMumu(c):drawTeam(c);if(L)ctx.restore();});
+ if(window.DN_DRAW)DN_DRAW(ctx,ts);// 2026-11-03 daynight-v1：日夜光線（名牌、按鈕在其上，不受影響）
  const TAGS=[];// 名牌不互蓋：由前往後放，撞到已放的名牌就往上疊一格（最多 4 格）
  for(const c of [...chars].sort((a,b)=>b.y-a.y)){const fs=Math.max(7,11/Math.sqrt(cam.z/fitZ()));ctx.font='bold '+fs+'px sans-serif';ctx.textAlign='center';let ty=c.y-hs[c.id]-4;
   const w=ctx.measureText(c.label).width+6;for(let k=0;k<4&&TAGS.some(r=>Math.abs(r[0]-c.x)<(r[2]+w)/2+1&&Math.abs(r[1]-ty)<fs+4);k++)ty-=fs+4;TAGS.push([c.x,ty,w]);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(c.x-w/2,ty-fs,w,fs+3);ctx.fillStyle='#fff';ctx.fillText(c.label,c.x,ty);const bb=bubbleOf(c);if(bb){const bf=fs*1.15;ctx.font='bold '+bf+'px sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"';const bw=ctx.measureText(bb).width+8,by=ty-fs-6-bf*0.2+Math.sin(performance.now()/250)*1;ctx.fillStyle=bb==='📋'||bb==='✋接單'?'rgba(255,236,150,.97)':'rgba(255,255,255,.95)';ctx.beginPath();ctx.roundRect(c.x-bw/2,by-bf,bw,bf+5,4);ctx.fill();ctx.beginPath();ctx.moveTo(c.x-3,by+5);ctx.lineTo(c.x+3,by+5);ctx.lineTo(c.x,by+9);ctx.fill();ctx.fillStyle='#333';ctx.fillText(bb,c.x,by+1);}}
@@ -690,7 +691,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／daynight-v1-20261103</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
@@ -745,4 +746,28 @@ const RC_CFG={
  window.RESTCORNER={ver:RC_VER,cfg:RC_CFG,enter,leave,setTone,state:()=>({on:S.on,tone:S.tone,phase:S.phase,loops:S.loops,raf:S.raf,saved:S.saved,filter:getComputedStyle(cv).filter,tintTone:tint.getAttribute('data-tone')})};
 })();
 </script>
-</body></html>
+<script>/* 2026-11-03 日夜變化 v1 (T015) daynight-v1-20261103
+   純前端視覺：依台北時間（Asia/Taipei）分 dawn 05-08 / day 08-17 / dusk 17-19 / night 19-05。
+   測試：網址加 ?tod=dawn|day|dusk|night 可強制時段。不呼叫 API、不改人物/任務/工位/預留位。 */
+(function(){
+ const DN_VER='daynight-v1-20261103',W=1669,H=942;
+ const Q=(new URLSearchParams(location.search).get('tod')||'').toLowerCase();
+ const FORCE=['dawn','day','dusk','night'].includes(Q)?Q:null;
+ function tpeHour(){try{const f=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',hour:'numeric',minute:'numeric',hour12:false}).formatToParts(new Date());const h=+f.find(x=>x.type==='hour').value%24,m=+f.find(x=>x.type==='minute').value;return h+m/60;}catch(e){const d=new Date();return ((d.getUTCHours()+8)%24)+d.getUTCMinutes()/60;}}
+ function tod(){if(FORCE)return FORCE;const h=tpeHour();return h>=5&&h<8?'dawn':h<17&&h>=8?'day':h>=17&&h<19?'dusk':'night';}
+ const STARS=[];let sd=7;const rnd=()=>((sd=(sd*16807)%2147483647)/2147483647);for(let i=0;i<70;i++)STARS.push([rnd()*W,rnd()*H*.22,.5+rnd()*1.1,rnd()*6.28]);
+ const LAMPS=[[400,305],[1090,425],[470,779],[560,752],[1010,786],[1110,787],[1210,786]];
+ let cur=tod();setInterval(()=>{cur=tod();document.documentElement.setAttribute('data-tod',cur);},30000);document.documentElement.setAttribute('data-tod',cur);
+ const RM=matchMedia('(prefers-reduced-motion: reduce)');
+ window.DN_DRAW=function(ctx,ts){const t=cur;if(t==='day')return;ctx.save();
+  if(t==='dawn'){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(255,170,190,.30)');g.addColorStop(.35,'rgba(255,205,150,.12)');g.addColorStop(1,'rgba(255,230,200,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+  else if(t==='dusk'){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(255,110,60,.34)');g.addColorStop(.5,'rgba(230,120,90,.18)');g.addColorStop(1,'rgba(90,40,90,.16)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+  else{let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(8,14,48,.62)');g.addColorStop(.3,'rgba(14,24,70,.46)');g.addColorStop(1,'rgba(18,28,72,.40)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+   for(const s of STARS){const a=RM.matches?.8:.55+.45*Math.sin(ts/700+s[3]);ctx.fillStyle='rgba(255,255,235,'+a.toFixed(2)+')';ctx.beginPath();ctx.arc(s[0],s[1],s[2],0,7);ctx.fill();}
+   ctx.globalCompositeOperation='lighter';
+   const glow=(x,y,r,a)=>{const rg=ctx.createRadialGradient(x,y,0,x,y,r);rg.addColorStop(0,'rgba(255,200,120,'+a+')');rg.addColorStop(1,'rgba(255,200,120,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();};
+   for(const l of LAMPS)glow(l[0],l[1]-12,55,.22);
+   const cs=(window.ISLAND&&window.ISLAND.chars)||[];for(const c of cs)if(c&&isFinite(c.x))glow(c.x,c.y-18,34,.20);}
+  ctx.restore();};
+ window.DAYNIGHT={ver:DN_VER,tod:()=>cur,forced:FORCE,hour:tpeHour};
+})();</script></body></html>
