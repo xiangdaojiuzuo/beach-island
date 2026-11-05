@@ -695,7 +695,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button><button type="button" id="rcA" aria-pressed="false">🕰 自動</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103／clock-v1-20261103／island-reshape-v2-20261103／topbar-fix-v1-20261105／topbar-fix-v2-20261105／topbar-fix-v3-20261105／boardwalk-v1-20261105／boardwalk-v2-20261105／skyreflect-v1-20261105／terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103／clock-v1-20261103／island-reshape-v2-20261103／topbar-fix-v1-20261105／topbar-fix-v2-20261105／topbar-fix-v3-20261105／boardwalk-v1-20261105／boardwalk-v2-20261105／skyreflect-v1-20261105／terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105／terrain-hill-v4-20261105</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
@@ -707,9 +707,9 @@ const RC_CFG={
  zoom:3.2,                                 // 進入時鏡頭倍率（× fitZ）
  // 預留給未來 AI 的 3 個位子（沙灘碼頭東側，彼此約 100px，不壓步道/碼頭/攤位）
  // 2026-11-03 island-reshape-v2：預留位＝海上木棧平台上的 3 塊空地（虛線框＋預留牌），不蓋屋子；等本人入住再決定（學長 12:14/12:15）
- // terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105：3 塊空地改到東南新建草丘平台（虛線框＋預留牌，不蓋屋子）；步道僅留海邊路徑
+ // terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105／terrain-hill-v4-20261105：3 塊空地改到東南新建草丘平台（虛線框＋預留牌，不蓋屋子）；步道僅留海邊路徑
  reserved:[{id:'chengcheng',name:'澄澄',x:1445,y:765,plot:true},{id:'xinyu',name:'芯語',x:1490,y:745,plot:true},{id:'metamuse',name:'Meta Muse',x:1535,y:770,plot:true}],
- // terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105：海邊木棧步道保持純路徑；路牌指向草丘。草丘本體與連通步道畫在 bg.webp
+ // terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105／terrain-hill-v4-20261105：海邊木棧步道保持純路徑；路牌指向草丘。草丘本體與連通步道畫在 bg.webp
  boardwalk:{pts:[[905,794],[960,808],[1020,820],[1085,828],[1150,830],[1210,824],[1270,812],[1305,798]],sign:[1240,820]},
  // 固定工位（只標記保護，不搬動）
  keep:{mina_work:[400,305],mumu_work:[1090,425]},
@@ -747,7 +747,7 @@ const RC_CFG={
  window.RC_DRAW=function(ctx,ts){// 由主畫面每格呼叫（世界座標）；不在休息角也畫：長椅＋預留位（靜態）
   const b=RC_CFG.bench;ctx.save();ctx.fillStyle='#8a5a32';ctx.fillRect(b.x-22,b.y-6,44,5);ctx.fillStyle='#6b4224';ctx.fillRect(b.x-20,b.y-1,3,6);ctx.fillRect(b.x+17,b.y-1,3,6);
   ctx.font='bold 7px sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText('🌊 休息角',b.x,b.y+14);
-     /* terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105：海邊木棧步道＋路牌（畫布繪製，不可點）；空地在草丘上 */
+     /* terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105／terrain-hill-v4-20261105：海邊木棧步道＋路牌（畫布繪製，不可點）；空地在草丘上 */
    {const bw=RC_CFG.boardwalk,p=bw.pts,sc=Math.abs(ctx.getTransform().a)/(devicePixelRatio||1)||1,lw=Math.max(12,9/sc);
     const path=()=>{ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length-1;i++){const mx=(p[i][0]+p[i+1][0])/2,my=(p[i][1]+p[i+1][1])/2;ctx.quadraticCurveTo(p[i][0],p[i][1],mx,my);}ctx.lineTo(p[p.length-1][0],p[p.length-1][1]);};
     ctx.lineCap='round';ctx.lineJoin='round';path();ctx.strokeStyle='rgba(40,22,8,.55)';ctx.lineWidth=lw+Math.max(3,2/sc);ctx.stroke();
@@ -764,7 +764,7 @@ for(const r of RC_CFG.reserved){if(r.plot){/* island-reshape-v2：空地＝虛�
    const t='預留：'+r.name,w=ctx.measureText(t).width+6;ctx.fillStyle='rgba(40,60,90,.6)';ctx.fillRect(r.x-w/2,r.y-17,w,10);ctx.fillStyle='#fff';ctx.fillText(t,r.x,r.y-9.5);}
   ctx.restore();if(S.v)drawV(ctx,S.v);};
  addEventListener('keydown',e=>{if(e.key==='Escape'&&S.on&&!P.hidden&&document.activeElement&&P.contains(document.activeElement)){P.hidden=true;mini.hidden=false;mini.focus();}});
- window.BOARDWALK={ver:'terrain-hill-v3-20261105',cfg:RC_CFG.boardwalk,reserved:RC_CFG.reserved};window.RESTCORNER={ver:RC_VER,cfg:RC_CFG,enter,leave,setTone,state:()=>({on:S.on,tone:S.tone,phase:S.phase,loops:S.loops,raf:S.raf,saved:S.saved,filter:getComputedStyle(cv).filter,tintTone:tint.getAttribute('data-tone')})};
+ window.BOARDWALK={ver:'terrain-hill-v4-20261105',cfg:RC_CFG.boardwalk,reserved:RC_CFG.reserved};window.RESTCORNER={ver:RC_VER,cfg:RC_CFG,enter,leave,setTone,state:()=>({on:S.on,tone:S.tone,phase:S.phase,loops:S.loops,raf:S.raf,saved:S.saved,filter:getComputedStyle(cv).filter,tintTone:tint.getAttribute('data-tone')})};
 })();
 </script>
 <style>/* 2026-11-03 skyfade：晨光/夜色改由畫布內天色處理，只壓暗場景；不再用整頁濾鏡與覆蓋層（避免介面變暗） */
@@ -826,7 +826,7 @@ for(const r of RC_CFG.reserved){if(r.plot){/* island-reshape-v2：空地＝虛�
    for(const p of LAMPS)glow(p[0],p[1]-12,55,.22*l.glow);
    const cs=(window.ISLAND&&window.ISLAND.chars)||[];for(const c of cs)if(c&&isFinite(c.x))glow(c.x,c.y-18,34,.20*l.glow);}
    ctx.restore();if(window.SR_DRAW)SR_DRAW(ctx,ts,shown,l);};
-  /* terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105／skyreflect：同一天色層內的海面反光（只在水面：用底圖算一次水面遮罩）。黃昏＝橘紅夕照碎光帶；晨光＝淡金；夜裡＝岸邊燈柱倒影。
+  /* terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105／terrain-hill-v4-20261105／skyreflect：同一天色層內的海面反光（只在水面：用底圖算一次水面遮罩）。黃昏＝橘紅夕照碎光帶；晨光＝淡金；夜裡＝岸邊燈柱倒影。
      效能：反光畫在半解析度離屏畫布，最多每 250ms 重畫一次（減少動態＝靜態不閃，只在亮度改變時重畫）；每幀只貼一張圖。 */
   {const SC=.5,RW=Math.round(W*SC),RH=Math.round(H*SC);let MASK=null,R=null,rx=null,lastGen=-1e9,lastKey='';
    const SHORE=LAMPS.filter(p=>p[1]>=700);
@@ -853,7 +853,7 @@ for(const r of RC_CFG.reserved){if(r.plot){/* island-reshape-v2：空地＝虛�
    window.SR_DRAW=function(ctx,ts,el,l){if(MASK===false)return;if(!MASK&&!mkMask())return;
     const tone=info.mode,warm=tone==='night'?0:tone==='morning'?1:Math.max(0,1-Math.abs(el-1)/7);if(warm<.02&&l.glow<.05)return;
     if(ts-lastGen>=250||RM.matches){gen(ts,el,l);lastGen=ts;}ctx.save();ctx.globalCompositeOperation='lighter';ctx.drawImage(R,0,0,W,H);ctx.restore();};
-   window.SKYREFLECT={ver:'terrain-hill-v3-20261105',mask:()=>MASK,buf:()=>R,shore:SHORE};}
+   window.SKYREFLECT={ver:'terrain-hill-v4-20261105',mask:()=>MASK,buf:()=>R,shore:SHORE};}
   /* skyreflect-v1：?sky= 測試時角落標示（不可點，自動避開時鐘／按鈕／面板） */
   if(Q){const lb=document.createElement('div');lb.id='skyTest';lb.setAttribute('role','note');const raw=(qs.get('sky')!=null?'sky':'tod')+'='+(qs.get('sky')??qs.get('tod'));
    const hm=FIX!=null?new Date(FIX+TW).toISOString().slice(11,16):'';const NM={night:'深夜',midnight:'午夜',dawn:'黎明',twilight:'黎明',sunrise:'日出',noon:'正午',day:'白天',sunset:'日落',dusk:'黃昏'};
@@ -867,7 +867,7 @@ for(const r of RC_CFG.reserved){if(r.plot){/* island-reshape-v2：空地＝虛�
  window.SKYFADE={ver:VER,solar,riseSet,look,fixed:FIX,state:()=>({mode:info.mode,phase:info.phase,sunEl:+info.sun.toFixed(2),shownEl:+shown.toFixed(2),twTime:tw(info.ms),sunrise:tw(info.rs.rise),sunset:tw(info.rs.set)})};
  window.DAYNIGHT={ver:VER,tod:()=>info.phase,hour:()=>((info.ms+TW)%86400000)/3600000};// 相容舊測試
 })();</script><style>
-#skyTest{position:fixed;z-index:26;pointer-events:none;max-width:calc(100vw - 16px);padding:3px 7px;border-radius:7px;background:rgba(20,30,60,.82);color:#ffe8b0;font:700 11px/1.3 "Noto Sans TC","PingFang TC",sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.3)}#skyTest.bad{background:rgba(120,30,30,.88);color:#fff}/* terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105 */
+#skyTest{position:fixed;z-index:26;pointer-events:none;max-width:calc(100vw - 16px);padding:3px 7px;border-radius:7px;background:rgba(20,30,60,.82);color:#ffe8b0;font:700 11px/1.3 "Noto Sans TC","PingFang TC",sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.3)}#skyTest.bad{background:rgba(120,30,30,.88);color:#fff}/* terrain-hill-v1-20261105／terrain-hill-v2-20261105／terrain-hill-v3-20261105／terrain-hill-v4-20261105 */
 #tiP{position:fixed;right:8px;top:52px;z-index:30;width:280px;max-width:calc(100vw - 16px);background:rgba(255,255,255,.95);color:#223;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.25);font:13px/1.4 "Noto Sans TC","PingFang TC",sans-serif}
 #tiP>button.h{all:unset;cursor:pointer;display:flex;justify-content:space-between;width:calc(100% - 16px);padding:7px 8px;font-weight:700;min-height:28px;align-items:center}
 #tiP .b{padding:0 8px 8px;max-height:45vh;overflow:auto}#tiP.col .b{display:none}
