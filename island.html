@@ -695,7 +695,7 @@ setInterval(()=>{if(B.classList.contains('kbd'))q();},1000);// 萬一沒有任�
 <div id="rcP" role="region" aria-label="休息角" hidden><div class="hd"><span>🌊 休息角（只在這頁）</span><button type="button" class="x" id="rcX" aria-label="收起休息角面板">✕</button></div>
 <div class="row" role="group" aria-label="光線"><button type="button" id="rcM" aria-pressed="true">🌅 晨光</button><button type="button" id="rcN" aria-pressed="false">🌙 夜色</button><button type="button" id="rcA" aria-pressed="false">🕰 自動</button></div>
 <div class="row"><button type="button" id="rcL">🚶 離開休息角</button></div>
-<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103／clock-v1-20261103／island-reshape-v2-20261103／topbar-fix-v1-20261105／topbar-fix-v2-20261105／topbar-fix-v3-20261105</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
+<div class="tip" id="rcVer">版本：restcorner-v1-20261103／chatdraft-v1-20261103／skyfade-v1-20261103／todayisland-v1-20261103／restexit-fix2-20261103／clock-v1-20261103／island-reshape-v2-20261103／topbar-fix-v1-20261105／topbar-fix-v2-20261105／topbar-fix-v3-20261105／boardwalk-v1-20261105</div><div class="tip">只是看海，不會改任務、不改大家的狀態、不發通知、不放音樂。</div></div>
 <button id="rcMini" type="button" hidden aria-label="打開休息角面板">🌊 休息角面板</button>
 <script>/* 2026-11-03 休息角 第一版 (T013) restcorner-v1-20261103
    純網頁端互動：不呼叫任何 API、不改 chars 狀態/任務、不通知、不放音樂。
@@ -707,7 +707,10 @@ const RC_CFG={
  zoom:3.2,                                 // 進入時鏡頭倍率（× fitZ）
  // 預留給未來 AI 的 3 個位子（沙灘碼頭東側，彼此約 100px，不壓步道/碼頭/攤位）
  // 2026-11-03 island-reshape-v2：預留位＝海上木棧平台上的 3 塊空地（虛線框＋預留牌），不蓋屋子；等本人入住再決定（學長 12:14/12:15）
- reserved:[{id:'chengcheng',name:'澄澄',x:1008,y:872,plot:true},{id:'xinyu',name:'芯語',x:1130,y:872,plot:true},{id:'metamuse',name:'Meta Muse',x:1252,y:872,plot:true}],
+ // boardwalk-v1-20261105：3 塊空地沿木棧步道錯落（緩弧），仍只放虛線框＋預留牌，不蓋屋子
+ reserved:[{id:'chengcheng',name:'澄澄',x:1012,y:874,plot:true},{id:'xinyu',name:'芯語',x:1138,y:888,plot:true},{id:'metamuse',name:'Meta Muse',x:1264,y:874,plot:true}],
+ // boardwalk-v1-20261105：從工位下方沙灘步道接出的木棧道（世界座標，平滑曲線經過各空地門口），中段路牌純裝飾
+ boardwalk:{pts:[[905,794],[960,810],[1012,824],[1075,834],[1138,838],[1201,834],[1264,824],[1302,814]],sign:[1104,837]},
  // 固定工位（只標記保護，不搬動）
  keep:{mina_work:[400,305],mumu_work:[1090,425]},
  minGap:60                                  // 預留位與工位/長椅最小距離（檢查用）
@@ -744,13 +747,25 @@ const RC_CFG={
  window.RC_DRAW=function(ctx,ts){// 由主畫面每格呼叫（世界座標）；不在休息角也畫：長椅＋預留位（靜態）
   const b=RC_CFG.bench;ctx.save();ctx.fillStyle='#8a5a32';ctx.fillRect(b.x-22,b.y-6,44,5);ctx.fillStyle='#6b4224';ctx.fillRect(b.x-20,b.y-1,3,6);ctx.fillRect(b.x+17,b.y-1,3,6);
   ctx.font='bold 7px sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText('🌊 休息角',b.x,b.y+14);
-  for(const r of RC_CFG.reserved){if(r.plot){/* island-reshape-v2：空地＝虛線框＋小「預留」牌（含名字），框內不放任何建築 */const pw=78,ph=30,px=r.x-pw/2,py=r.y-ph;ctx.fillStyle='rgba(255,255,255,.10)';ctx.fillRect(px,py,pw,ph);ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=1.3;ctx.strokeRect(px,py,pw,ph);ctx.setLineDash([]);
-    const sx=px+pw-6,sy=py-2;ctx.fillStyle='#6b4224';ctx.fillRect(sx-1,sy-14,2,16);ctx.font='bold 6.5px sans-serif';const t2='預留・'+r.name,w=ctx.measureText(t2).width+8;ctx.fillStyle='#c98b4f';ctx.fillRect(sx-w/2,sy-24,w,11);ctx.strokeStyle='#6b4224';ctx.lineWidth=.8;ctx.strokeRect(sx-w/2,sy-24,w,11);ctx.fillStyle='#3a2210';ctx.fillText(t2,sx,sy-16);ctx.font='bold 7px sans-serif';continue;}
+     /* boardwalk-v1-20261105：木棧道＋門口小平台＋中段路牌（畫布繪製，不可點、不可聚焦）；手機縮小時保持最小螢幕寬度不變成細線 */
+   {const bw=RC_CFG.boardwalk,p=bw.pts,sc=Math.abs(ctx.getTransform().a)/(devicePixelRatio||1)||1,lw=Math.max(12,9/sc);
+    const path=()=>{ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length-1;i++){const mx=(p[i][0]+p[i+1][0])/2,my=(p[i][1]+p[i+1][1])/2;ctx.quadraticCurveTo(p[i][0],p[i][1],mx,my);}ctx.lineTo(p[p.length-1][0],p[p.length-1][1]);};
+    ctx.lineCap='round';ctx.lineJoin='round';path();ctx.strokeStyle='rgba(40,22,8,.55)';ctx.lineWidth=lw+Math.max(3,2/sc);ctx.stroke();
+    path();ctx.strokeStyle='#b07a45';ctx.lineWidth=lw;ctx.stroke();
+    path();ctx.setLineDash([Math.max(1.2,1/sc),Math.max(4,3/sc)]);ctx.lineCap='butt';ctx.strokeStyle='#6b4224';ctx.lineWidth=lw*.92;ctx.stroke();ctx.setLineDash([]);
+    path();ctx.strokeStyle='rgba(255,230,180,.35)';ctx.lineWidth=Math.max(1,.8/sc);ctx.stroke();ctx.lineCap='butt';
+    for(const r of RC_CFG.reserved){if(!r.plot)continue;const top=r.y-30;/* 門口小平台：空地上緣、步道旁 */
+     const py0=top-8;ctx.fillStyle='#6b4224';ctx.fillRect(r.x-14,py0-1,28,10);ctx.fillStyle='#c08a52';ctx.fillRect(r.x-13,py0,26,8);ctx.fillStyle='#8a5a32';for(let k=-9;k<=9;k+=6)ctx.fillRect(r.x+k,py0,1,8);}
+    const s=bw.sign,sx=s[0],sy=s[1]-lw/2-1;ctx.fillStyle='#5a3418';ctx.fillRect(sx-1.2,sy-22,2.4,22);ctx.fillStyle='#c98b4f';ctx.strokeStyle='#5a3418';ctx.lineWidth=.8;
+    ctx.beginPath();ctx.moveTo(sx-2,sy-21);ctx.lineTo(sx+28,sy-21);ctx.lineTo(sx+33,sy-17);ctx.lineTo(sx+28,sy-13);ctx.lineTo(sx-2,sy-13);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.font='bold 6px sans-serif';ctx.textAlign='center';ctx.fillStyle='#3a2210';ctx.fillText('新鄰居 →',sx+15,sy-15);ctx.font='bold 7px sans-serif';}
+for(const r of RC_CFG.reserved){if(r.plot){/* island-reshape-v2：空地＝虛線框＋小「預留」牌（含名字），框內不放任何建築 */const pw=78,ph=30,px=r.x-pw/2,py=r.y-ph;ctx.fillStyle='rgba(255,255,255,.10)';ctx.fillRect(px,py,pw,ph);ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=1.3;ctx.strokeRect(px,py,pw,ph);ctx.setLineDash([]);
+    const sx=r.x,sy=py+ph+1;/* boardwalk-v1：預留牌改立在框內，避免壓到上方步道 */ctx.fillStyle='#6b4224';ctx.fillRect(sx-1,sy-14,2,12);ctx.font='bold 6.5px sans-serif';const t2='預留・'+r.name,w=ctx.measureText(t2).width+8;ctx.fillStyle='#c98b4f';ctx.fillRect(sx-w/2,sy-24,w,11);ctx.strokeStyle='#6b4224';ctx.lineWidth=.8;ctx.strokeRect(sx-w/2,sy-24,w,11);ctx.fillStyle='#3a2210';ctx.textAlign='center';ctx.fillText(t2,sx,sy-16);ctx.font='bold 7px sans-serif';continue;}
    ctx.setLineDash([3,2]);ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(r.x,r.y,12,4.5,0,0,7);ctx.stroke();ctx.setLineDash([]);
    const t='預留：'+r.name,w=ctx.measureText(t).width+6;ctx.fillStyle='rgba(40,60,90,.6)';ctx.fillRect(r.x-w/2,r.y-17,w,10);ctx.fillStyle='#fff';ctx.fillText(t,r.x,r.y-9.5);}
   ctx.restore();if(S.v)drawV(ctx,S.v);};
  addEventListener('keydown',e=>{if(e.key==='Escape'&&S.on&&!P.hidden&&document.activeElement&&P.contains(document.activeElement)){P.hidden=true;mini.hidden=false;mini.focus();}});
- window.RESTCORNER={ver:RC_VER,cfg:RC_CFG,enter,leave,setTone,state:()=>({on:S.on,tone:S.tone,phase:S.phase,loops:S.loops,raf:S.raf,saved:S.saved,filter:getComputedStyle(cv).filter,tintTone:tint.getAttribute('data-tone')})};
+ window.BOARDWALK={ver:'boardwalk-v1-20261105',cfg:RC_CFG.boardwalk,reserved:RC_CFG.reserved};window.RESTCORNER={ver:RC_VER,cfg:RC_CFG,enter,leave,setTone,state:()=>({on:S.on,tone:S.tone,phase:S.phase,loops:S.loops,raf:S.raf,saved:S.saved,filter:getComputedStyle(cv).filter,tintTone:tint.getAttribute('data-tone')})};
 })();
 </script>
 <style>/* 2026-11-03 skyfade：晨光/夜色改由畫布內天色處理，只壓暗場景；不再用整頁濾鏡與覆蓋層（避免介面變暗） */
